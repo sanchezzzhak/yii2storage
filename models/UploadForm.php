@@ -7,7 +7,7 @@
  * To change this template use File | Settings | File Templates.
  */
 
-namespace sanchezzzhak\yii2storage\models;
+namespace yii2\storage\models;
 
 use \yii\base\Model;
 

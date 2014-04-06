@@ -7,7 +7,7 @@
  * To change this template use File | Settings | File Templates.
  */
 
-namespace sanchezzzhak\yii2storage\actions;
+namespace yii2\storage\actions;
 
 use sanchezzzhak\yii2storage\models\UploadForm;
 use Yii;
@@ -24,9 +24,9 @@ use yii\helpers\Url;
  		{
  			return [
  				'upload' => [
- 					'class' => 'sanchezzzhak\yii2storage\actions\UploadAction',
-  					'form_name' => 'sanchezzzhak\yii2storage\models\UploadForm'
- 					'path'  => Yii::$app->getBasePath() . /../uploads/,
+ 					'class' => 'yii2\storage\actions\UploadAction',
+  					'form_name' => 'yii2\storage\actions\models\UploadForm',
+ 					'path'  => Yii::$app->getBasePath() . '/../uploads/',
  					'public_path' => '/uploads/'
  *
  				],

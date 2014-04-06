@@ -1,5 +1,5 @@
 {
-    "name": "sanchezzzhak/yii2-storage",
+    "name": "yii2/storage",
     "description": "file upload/resize/crop file move storage",
     "type": "yii2-extension",
     "keywords": ["yii2","extension"],
@@ -12,7 +12,7 @@
     ],
     "autoload": {
         "psr-4": {
-            "sanchezzzhak\\yii2-storage\\": ""
+            "yii2\\storage\\": ""
         }
     }
 }
