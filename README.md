@@ -1,4 +1,5 @@
-file storage
+Storage and Upload file widget
+
 ============
 file upload/resize/crop file move storage
 
@@ -28,4 +29,7 @@ Usage
 Once the extension is installed, simply use it in your code by  :
 
 ```php
-<?= \sanchezzzhak\yii2storage\AutoloadExample::widget(); ?>```
+<?= \sanchezzzhak\yii2storage\Upload::widget([
+    'model' => $model
+    'name'  => 'attr_file'
+]); ?>```
