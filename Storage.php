@@ -7,7 +7,7 @@
  * To change this template use File | Settings | File Templates.
  */
 
-namespace sanchezzzhak\yii2storage;
+namespace yii2\storage;
 
 use Yii;
 use yii\base\Exception;
