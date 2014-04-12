@@ -22,16 +22,14 @@ class Upload extends Widget
 	 * @var string the model attribute that this widget is associated with.
 	 */
 	public $attribute;
-	/**
-	 * @var string the input name. This must be set if [[model]] and [[attribute]] are not set.
-	 */
-	public $name;
-	/**
-	 * @var string the input value.
-	 */
-	public $value;
 
-	public $options = [];
+	public $form = 'form';
+	public $upload = 'upload';
+	public $download = 'download';
+
+	public $multiple = false;
+	public $max_upload = 2;
+	public $auto_upload = false;
 
 	/**
 	 * Initializes the widget.
@@ -39,20 +37,24 @@ class Upload extends Widget
 	 */
 	public function init()
 	{
-		parent::init();
-		if (!$this->hasModel() && $this->name === null)
-		{
-			throw new InvalidConfigException("Either 'name', or 'model' and 'attribute' properties must be specified.");
-		}
 
-		UploadAsset::register($this->getView());
+		parent::init();
+		if (!$this->hasModel() && $this->attribute === null)
+		{
+			throw new InvalidConfigException("Either 'attribute', or 'model' and 'attribute' properties must be specified.");
+		}
+		UploadAssets::register($this->getView());
 	}
 
 	public function run()
 	{
+		echo $this->render($this->form,[
+			'model' => $this->model,
+			'attribute' => $this->attribute
 
-		echo $this->render($this->uploadView);
-		echo $this->render($this->downloadView);
+		]);
+		//echo $this->render($this->upload);
+		//echo $this->render($this->download);
 	}
 
 	/**

@@ -14,5 +14,11 @@
         "psr-4": {
             "yii2\\storage\\": ""
         }
-    }
+    },
+	"require": {
+		"php":">=5.4.0",
+		"yiisoft/yii2-jui": "*"
+	}
+	
+	
 }

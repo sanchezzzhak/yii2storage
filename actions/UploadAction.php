@@ -80,12 +80,8 @@ class UploadAction extends Action {
 		}
 		
 		if( !isset($this->form_model)) {
-
-
 			$this->form_model = Yii::createObject(['class'=>$this->form_name]);
 
-			var_dump($this->form_model);
-			exit;
 		}
 	}
 
@@ -109,13 +105,14 @@ class UploadAction extends Action {
 		}
 	}
 
-
 	protected function handleUploading()
 	{
 		$model = $this->form_model;
-		$file = UploadedFile::getInstance($model,'file');
+		if(! $file = UploadedFile::getInstance($model,'file'))
+		{
+			return false;
+		}
 		$model->file = $file->name;
-
 		if($model->validate())
 		{
 			$path = $this->path;
@@ -126,7 +123,7 @@ class UploadAction extends Action {
 				mkdir($path, 0777, true);
 				chmod($path, 0777);
 			}
-			if($file->saveAs($path_file ))
+			if(!empty($path_file) && $file->saveAs($path_file ))
 			{
 				chmod($path_file , 0666);
 

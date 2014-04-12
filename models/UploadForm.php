@@ -32,6 +32,9 @@ class UploadForm extends Model
 	 */
 	public function attributeLabels()
 	{
+
+
+
 		return array(
 			'file'=>'Upload files',
 		);
