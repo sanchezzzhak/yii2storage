@@ -17,7 +17,9 @@ class UploadAssets extends AssetBundle
 		'fileupload/js/jquery.fileupload-validate.js',
 		'fileupload/js/jquery.fileupload-ui.js',
 	];
-	public $css = [];
+	public $css = [
+		'yii2storage.css',
+	];
 
 	public $depends = [
 		'yii\jui\CoreAsset',

@@ -18,18 +18,23 @@ class Upload extends Widget
 	 * @var Model the data model that this widget is associated with.
 	 */
 	public $model;
+
 	/**
-	 * @var string the model attribute that this widget is associated with.
+	 * @var string the model attribute name that this widget is associated with.
 	 */
-	public $attribute;
+	public $name;
 
 	public $form = 'form';
 	public $upload = 'upload';
 	public $download = 'download';
 
-	public $multiple = false;
+	public $options = [];
+
+	public $multiple = true;
 	public $max_upload = 2;
 	public $auto_upload = false;
+
+	public $label_btn = 'Add files...';
 
 	/**
 	 * Initializes the widget.
@@ -39,22 +44,29 @@ class Upload extends Widget
 	{
 
 		parent::init();
-		if (!$this->hasModel() && $this->attribute === null)
+		if (!$this->hasModel() && $this->name === null)
 		{
-			throw new InvalidConfigException("Either 'attribute', or 'model' and 'attribute' properties must be specified.");
+			throw new InvalidConfigException("Either 'name
+			', or 'model' and 'attribute' properties must be specified.");
 		}
 		UploadAssets::register($this->getView());
 	}
 
 	public function run()
 	{
+		if($this->multiple == true )
+		{
+			$this->options['multiple'] = true;
+		}
+
 		echo $this->render($this->form,[
-			'model' => $this->model,
-			'attribute' => $this->attribute
+			'model'   => $this->model,
+			'name'    => $this->name,
+			'options' => $this->options,
+			'label_btn' => $this->label_btn,
 
 		]);
-		//echo $this->render($this->upload);
-		//echo $this->render($this->download);
+
 	}
 
 	/**
@@ -62,7 +74,7 @@ class Upload extends Widget
 	 */
 	protected function hasModel()
 	{
-		return $this->model instanceof Model && $this->attribute !== null;
+		return $this->model instanceof Model;
 	}
 
 }
