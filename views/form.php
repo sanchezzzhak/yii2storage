@@ -1,5 +1,5 @@
 <?php
-namespace yii2\storage\views;
+namespace sanchezzzhak\storage\views;
 use yii\helpers\Html;
 ?>
 

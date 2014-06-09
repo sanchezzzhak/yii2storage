@@ -1,13 +1,13 @@
 <?php
 /**
  * Created by JetBrains PhpStorm.
- * User: Александр
+ * User: Tutik Alexsandr
  * Date: 06.04.14
  * Time: 1:08
  * To change this template use File | Settings | File Templates.
  */
 
-namespace yii2\storage;
+namespace sanchezzzhak\storage;
 
 use Yii;
 use yii\base\Exception;
@@ -145,7 +145,7 @@ class Storage
 	}
 
 	/**
-	 * @return string
+	 * @return string base url to storage directory
 	 */
 	public function getBaseUrl()
 	{
@@ -257,10 +257,16 @@ class Storage
 		{
 			return $file;
 		}
+		
 		return null;
 	}
 
 	/**
+	 * ```php
+	 * rel_path('/srv/www/vhosts/devel/site.domen/storage/photo/0f/3d/3c/02/d2/0f3d3c02d2859a9f0a3d45916c06c256.jpg')
+	 * return storage/photo/0f/3d/3c/02/d2/0f3d3c02d2859a9f0a3d45916c06c256.jpg
+	 * ```
+	 *
 	 * @param $path
 	 * @return string
 	 */
@@ -335,13 +341,16 @@ class Storage
 
 			return true;
 		}
+		
 		return false;
 	}
 
 
 	/**
-	 * @param $path full path /www/host/storage/photo/a2/d4/34/a56e4890.jpg
-	 *					 OR absolute basePath photo/a2/d4/34/a56e4890.jpg
+	 * Remove all files in the folder
+	 * @param $path
+	 * 	full path /www/host/storage/photo/a2/d4/34/a56e4890.jpg
+	 *	OR absolute basePath photo/a2/d4/34/a56e4890.jpg
 	 *
 	 * @return bool|int
 	 * ~ bool not find path
@@ -378,11 +387,48 @@ class Storage
 		return $i;
 	}
 
+	/**
+	 * Checks path whether the storage
+	 * --- The actual existence of a file on the file system is not checked
+	 * @param $path
+	 *
+	 * @return bool
+	 */
+	public function in_storage($path)
+	{
+		if (!is_string($path))
+			return false;
+
+		$path1 = $this->_basePath.DIRECTORY_SEPARATOR.$this->rel_path($path);
+		$p = pathinfo($path);
+		if (!strlen($p['filename']) || !strlen($p['basename']))
+			return false;
+
+		$path2 = $p['dirname'].DIRECTORY_SEPARATOR.$p['basename'];
+		
+		return ($path1 && $path1 == $path2);
+	}
 
 
-
-
-
-
+	/**
+	 * Add prefix to file path
+	 * ```php
+	 * photo_path('photo/a2/d4/34/a56e4890.jpg',180,100)
+	 * return 'photo/a2/d4/34/180x100_a56e4890.jpg'
+	 * ```
+	 * @param $path
+	 * @param string $width
+	 * @param string $height
+	 * @return string
+	*/
+	public static function photo_path($path, $width=0, $height = 0 )
+	{
+		if(empty($path)) return '';
+		$path = pathinfo($path);
+		$size = (!$width && !$height) ? '' : $width ."x".$height;
+		$path_part = preg_replace('#[0-9]{1,3}x[0-9]{1,3}_#ixs', '', $path['basename']);
+		
+		return $path['dirname'].'/'.$size.$path_part;
+	}
 
 }

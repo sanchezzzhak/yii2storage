@@ -1,5 +1,5 @@
 <?php
-namespace yii2\storage;
+namespace sanchezzzhak\storage;
 
 use Yii;
 use yii\base\Widget;

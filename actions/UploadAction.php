@@ -7,9 +7,9 @@
  * To change this template use File | Settings | File Templates.
  */
 
-namespace yii2\storage\actions;
+namespace sanchezzzhak\storage\actions;
+use sanchezzzhak\storage\models\UploadForm;
 
-use sanchezzzhak\yii2storage\models\UploadForm;
 use Yii;
 use yii\base\Action;
 use yii\base\ErrorException;
@@ -25,8 +25,8 @@ use yii\helpers\Url;
  		{
  			return [
  				'upload' => [
- 					'class' => 'yii2\storage\actions\UploadAction',
-  					'form_name' => 'yii2\storage\actions\models\UploadForm',
+ 					'class' => 'sanchezzzhak\storage\actions\UploadAction',
+  					'form_name' => 'sanchezzzhak\storage\actions\models\UploadForm',
  					'path'  => Yii::$app->getBasePath() . '/../uploads/',
  					'public_path' => '/uploads/'
  *
@@ -47,13 +47,6 @@ class UploadAction extends Action {
 	{
 		parent::init();
 		$base_path = Yii::$app->getBasePath();
-
-
-
-
-		//$this->path = (!isset($this->path)) ? realpath( $base_path ."/web/uploads/") : realpath($this->path);
-
-
 
 		if (!is_dir($this->path))
 		{
@@ -156,6 +149,8 @@ class UploadAction extends Action {
 				}
 
 			}
+			
+			
 		}
 	}
 
@@ -163,11 +158,6 @@ class UploadAction extends Action {
 	protected function beforeReturn()
 	{
 		$path = $this->path;
-
-
-
-
-
 		return true;
 	}
 }

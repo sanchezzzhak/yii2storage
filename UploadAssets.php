@@ -1,10 +1,10 @@
 <?php
-namespace yii2\storage;
+namespace sanchezzzhak\storage;
 use yii\web\AssetBundle;
 
 class UploadAssets extends AssetBundle
 {
-	public $sourcePath = '@yii2/storage/assets';
+	public $sourcePath = '@sanchezzzhak/storage/assets';
 
 	public $js = [
 		'fileupload/js/vendor/jquery.ui.widget.js',
