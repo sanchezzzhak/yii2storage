@@ -23,13 +23,13 @@ The preferred way to install this extension is through [composer](http://getcomp
 Either run
 
 ```
-php composer.phar require --prefer-dist yii2/storage "*"
+php composer.phar require --prefer-dist sanchezzzhak/storage "*"
 ```
 
 or add
 
 ```
-"yii2/storage": "*"
+"sanchezzzhak/storage": "*"
 ```
 
 to the require section of your `composer.json` file.
@@ -41,7 +41,7 @@ Usage
 Once the extension is installed, simply use it in your code by  :
 
 ```php
-<?= \yii2\storage\Upload::widget([
+<?= \sanchezzzhak\storage\Upload::widget([
     'model' => $model
     'name'  => 'attr_file'
 ]); ?>```
