@@ -2,23 +2,23 @@
     "name": "kak/storage",
     "description": "file upload/resize/crop file move storage",
     "type": "yii2-extension",
-    "keywords": ["yii2","extension"],
-    "license": "FREE",
+	"homepage": "https://github.com/sanchezzzhak/yii2storage",
+    "keywords": ["yii2","extension","storage"],
+    "license": "BSD-3-Clause",
     "authors": [
         {
             "name": "Tutik Alexsandr",
             "email": "sanchezzzhak@ya.ru"
         }
     ],
-    "autoload": {
-       
-		"psr-4": { "kak\\storage\\": "" }
-        
-    },
 	"require": {
 		"php":">=5.4.0",
+		"yiisoft/yii2": "*",
 		"yiisoft/yii2-jui": "*"
 	}
-	
-	
+	"autoload": {
+		"psr-4": {
+			"kak\\storage\\": ""
+		}
+	}
 }
