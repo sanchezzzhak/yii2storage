@@ -40,10 +40,10 @@ Once the extension is installed, simply use it in your code by  :
 
 ```php
 <?= \kak\storage\Upload::widget([
-    'model' => $model,
-    'name'  => 'attr_file'
+    'model' => $model
 ]); ?>
 ```
+@todo api options widget
 
  example use controller this uploading
 ```php
@@ -53,8 +53,9 @@ Once the extension is installed, simply use it in your code by  :
             'upload' => [
                 'class' => 'kak\storage\actions\UploadAction',
                 'form_name' => 'kak\storage\models\UploadForm',
-                'path'  => Yii::$app->getBasePath() . '/../uploads/',
+                'path'  => Yii::$app->getBasePath() . '/web/uploads/',
                 'public_path' => '/uploads/',
+                'random_name' => false,
             ],
         ];
     }
