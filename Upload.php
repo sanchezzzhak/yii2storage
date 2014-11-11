@@ -8,7 +8,6 @@ use yii\base\InvalidConfigException;
 
 /**
  * Class Upload Widget
- * @package kak\storage
  */
 class Upload extends Widget
 {
