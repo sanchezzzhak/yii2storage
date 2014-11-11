@@ -7,7 +7,7 @@
  * To change this template use File | Settings | File Templates.
  */
 
-namespace sanchezzzhak\storage;
+namespace kak\storage;
 
 use Yii;
 use yii\base\Exception;
@@ -15,40 +15,25 @@ use yii\log\Logger;
 
 
 /**
-* config for Storage
-*
-*  base_path .  . . . . . . . . . . . . . . .  путь к корневому директорию
-*   |
- *   `-- banner  . . . . . . . . . . . . . . .  директорий для баннеров
- *   |   `-- nesting_level directories . . . .
- *   |
- *   `-- photo . . . . . . . . . . . . . . . .  директорий для фоток
- *   |   `-- nesting_level directories . . . .
- *   |
- *   `-- video   . . . . . . . . . . . . . . .  директорий для видеороликов
- *      `-- nesting_level directories  . . . .
- *
- *  base_url . . . . . . . . . . . . . . . . . url корневого директория
- *
- *
- *     class  => '',
- *    'storage'       => array(
- *        'base_path'  => $commonConfigDir."/../../storage/",
- *        'base_url'   => "/storage/",
- *        'types' => array(
- *            'photo'  => array(
- *                'level' => 5,
- *            ),
- *            'banner' => array(
- *                'level' => 5,
- *            ),
- *            'video'  => array(
- *                'level' => 5,
- *            ),
- *        ),
- *    ),
- *
+* Config for Storage
+
+'storage'       => array(
+	'base_path'  => $commonConfigDir."/../../storage/",
+	'base_url'   => "/storage/",
+	'storages' => array(
+		'photo'  => array(
+			'level' => 3,
+		),
+		'file' => array(
+			'level' => 3,
+		),
+		'tmp'  => array(
+			'level' => 0,
+		),
+	),
+),
  */
+ 
 class Storage
 {
 
@@ -75,7 +60,7 @@ class Storage
 
 		if (!is_string($id))
 		{
-			$message = Yii::t('storage', 'storage ID must be string.');
+			$message = Yii::t('yii', 'storage ID must be string.');
 			$log->log($message, Logger::LEVEL_ERROR, 'storage');
 			throw new Exception($message);
 		}
@@ -85,7 +70,7 @@ class Storage
 
 		if (!$this->is_exist($id))
 		{
-			$message = Yii::t('storage', 'Storage ID={id} not exist.', array('{id}' => $id));
+			$message = Yii::t('yii', 'Storage ID={id} not exist.', array('{id}' => $id));
 			$log->log($message, Logger::LEVEL_ERROR, 'storage');
 			throw new Exception($message);
 		}
@@ -95,7 +80,7 @@ class Storage
 
 		if (($this->_basePath = realpath($config['basePath'])) === false || !is_dir($this->_basePath))
 		{
-			$message = Yii::t('storage', 'Base path "{path}" is not a valid directory.',
+			$message = Yii::t('yii', 'Base path "{path}" is not a valid directory.',
 				array('{path}' => $config['basePath']));
 			$log->log($message, Logger::LEVEL_ERROR, 'storage');
 			throw new Exception($message);
@@ -103,7 +88,7 @@ class Storage
 
 		if (!is_writable($this->_basePath))
 		{
-			$message = Yii::t('storage', 'Not writable directory: {basePath}', [
+			$message = Yii::t('yii', 'Not writable directory: {basePath}', [
 				'{basePath}' => $this->_basePath
 			]);
 

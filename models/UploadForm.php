@@ -1,6 +1,6 @@
 <?php
 
-namespace sanchezzzhak\storage\models;
+namespace kak\storage\models;
 use \yii\base\Model;
 
 class UploadForm extends Model

@@ -1,5 +1,5 @@
 <?php
-namespace sanchezzzhak\storage;
+namespace kak\storage;
 
 use Yii;
 use yii\base\Widget;
@@ -8,9 +8,7 @@ use yii\base\InvalidConfigException;
 
 /**
  * Class Upload Widget
- * @package sanchezzzhak\yii2storage
- *
- *
+ * @package kak\storage
  */
 class Upload extends Widget
 {
@@ -27,8 +25,6 @@ class Upload extends Widget
 	public $form = 'form';
 	public $upload = 'upload';
 	public $download = 'download';
-
-	public $options = [];
 
 	public $multiple = true;
 	public $max_upload = 2;
@@ -62,7 +58,9 @@ class Upload extends Widget
 		echo $this->render($this->form,[
 			'model'   => $this->model,
 			'name'    => $this->name,
+
 			'options' => $this->options,
+
 			'label_btn' => $this->label_btn,
 
 		]);

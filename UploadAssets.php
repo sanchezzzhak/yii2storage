@@ -1,24 +1,23 @@
 <?php
-namespace sanchezzzhak\storage;
-use yii\web\AssetBundle;
+namespace kak\storage;
 
-class UploadAssets extends AssetBundle
+class UploadAssets extends \yii\web\AssetBundle
 {
-	public $sourcePath = '@sanchezzzhak/storage/assets';
+	public $sourcePath = '@kak/storage/assets';
 
 	public $js = [
-		'fileupload/js/vendor/jquery.ui.widget.js',
-		'fileupload/js/jquery.iframe-transport.js',
-		'fileupload/js/jquery.fileupload.js',
-		'fileupload/js/jquery.fileupload-process.js',
-		'fileupload/js/jquery.fileupload-image.js',
-		'fileupload/js/jquery.fileupload-audio.js',
-		'fileupload/js/jquery.fileupload-video.js',
-		'fileupload/js/jquery.fileupload-validate.js',
-		'fileupload/js/jquery.fileupload-ui.js',
+		'fileupload/vendor/jquery.ui.widget.js',
+		'fileupload/jquery.iframe-transport.js',
+		'fileupload/jquery.fileupload.js',
+		'fileupload/jquery.fileupload-process.js',
+		'fileupload/jquery.fileupload-image.js',
+		'fileupload/jquery.fileupload-audio.js',
+		'fileupload/jquery.fileupload-video.js',
+		'fileupload/jquery.fileupload-validate.js',
+		'fileupload/jquery.fileupload-ui.js',
 	];
 	public $css = [
-		'yii2storage.css',
+		'storage.css',
 	];
 
 	public $depends = [

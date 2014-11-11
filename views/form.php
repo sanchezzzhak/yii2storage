@@ -1,8 +1,6 @@
 <?php
-namespace sanchezzzhak\storage\views;
-use yii\helpers\Html;
+    use yii\helpers\Html;
 ?>
-
 
 <div class="yii2upload">
 	<div class="row">

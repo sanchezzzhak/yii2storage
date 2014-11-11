@@ -5,12 +5,10 @@ This is non-stable alpha version. It's not recommended to go in production with 
 Any contributions are welcome
 
 The plans:
-* Widjet Upload preview images analog XUpload Yii.1
-* Widjet Select dealog files (`DropBox` `YaDisk` `GDrive` or popular services)
-* Storage files to directory categories ( `images`, `baners`, `videos`.. or `custom derictory` )
+* Widjet Upload analog XUpload Yii.1
+* Storage files to directory categories ( `images`, `baners`, `videos`.. or `custom derictory`)
 * Store to Amason Server
 * Store upload to remote server
-
 
 ============
 file upload/resize/crop file move storage
@@ -23,13 +21,13 @@ The preferred way to install this extension is through [composer](http://getcomp
 Either run
 
 ```
-php composer.phar require --prefer-dist sanchezzzhak/storage "*"
+php composer.phar require --prefer-dist kak/storage "*"
 ```
 
 or add
 
 ```
-"sanchezzzhak/storage": "*"
+"kak/storage": "*"
 ```
 
 to the require section of your `composer.json` file.
@@ -41,7 +39,8 @@ Usage
 Once the extension is installed, simply use it in your code by  :
 
 ```php
-<?= \sanchezzzhak\storage\Upload::widget([
-    'model' => $model
+<?= \kak\storage\Upload::widget([
+    'model' => $model,
     'name'  => 'attr_file'
-]); ?>```
+]); ?>
+```

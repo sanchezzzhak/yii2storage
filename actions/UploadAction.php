@@ -7,8 +7,8 @@
  * To change this template use File | Settings | File Templates.
  */
 
-namespace sanchezzzhak\storage\actions;
-use sanchezzzhak\storage\models\UploadForm;
+namespace kak\storage\actions;
+use kak\storage\models\UploadForm;
 
 use Yii;
 use yii\base\Action;
@@ -18,18 +18,18 @@ use yii\web\HttpException;
 use yii\helpers\Url;
 
 /**
- * example
+ * example use controller this uploading
  *
  	```php
  		public function actions()
  		{
  			return [
  				'upload' => [
- 					'class' => 'sanchezzzhak\storage\actions\UploadAction',
-  					'form_name' => 'sanchezzzhak\storage\actions\models\UploadForm',
+ 					'class' => 'kak\storage\actions\UploadAction',
+  					'form_name' => 'kak\storage\models\UploadForm',
  					'path'  => Yii::$app->getBasePath() . '/../uploads/',
- 					'public_path' => '/uploads/'
- *
+ 					'public_path' => '/uploads/',
+                    'successCallback' => [$this, 'successCallback'],
  				],
  			];
  		}
@@ -105,6 +105,8 @@ class UploadAction extends Action {
 		{
 			return false;
 		}
+
+        /** @var \kak\storage\models\UploadForm $model */
 		$model->file = $file->name;
 		if($model->validate())
 		{
@@ -149,11 +151,8 @@ class UploadAction extends Action {
 				}
 
 			}
-			
-			
 		}
 	}
-
 
 	protected function beforeReturn()
 	{
