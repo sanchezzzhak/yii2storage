@@ -44,3 +44,28 @@ Once the extension is installed, simply use it in your code by  :
     'name'  => 'attr_file'
 ]); ?>
 ```
+
+ example use controller this uploading
+```php
+    public function actions()
+    {
+        return [
+            'upload' => [
+                'class' => 'kak\storage\actions\UploadAction',
+                'form_name' => 'kak\storage\models\UploadForm',
+                'path'  => Yii::$app->getBasePath() . '/../uploads/',
+                'public_path' => '/uploads/',
+            ],
+        ];
+    }
+```
+
+Custom run action
+```php
+    $action = new \kak\storage\actions\UploadAction($this->id, $this, [
+        'form_name' => 'kak\storage\models\UploadForm',
+        'path'  => Yii::$app->getBasePath() . '/web/uploads/',
+        'public_path' => '/uploads/'
+    ]);
+    return $action->run();
+```

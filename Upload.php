@@ -4,7 +4,6 @@ namespace kak\storage;
 use Yii;
 use yii\base\Widget;
 use yii\base\Model;
-use yii\base\InvalidConfigException;
 
 /**
  * Class Upload Widget
@@ -15,36 +14,32 @@ class Upload extends Widget
 	 * @var Model the data model that this widget is associated with.
 	 */
 	public $model;
+    public $options = [];
 
-	/**
-	 * @var string the model attribute name that this widget is associated with.
-	 */
-	public $name;
-
-	public $form = 'form';
-	public $upload = 'upload';
-	public $download = 'download';
+    public $url = '/upload';
 
 	public $multiple = true;
-	public $max_upload = 2;
+	public $max_uploads = 2;
 	public $auto_upload = false;
 
 	public $label_btn = 'Add files...';
 
-	/**
-	 * Initializes the widget.
-	 * If you override this method, make sure you call the parent implementation first.
-	 */
+
+    public $id = false;
+    public $view = 'form';
+
 	public function init()
 	{
 
 		parent::init();
-		if (!$this->hasModel() && $this->name === null)
-		{
-			throw new InvalidConfigException("Either 'name
-			', or 'model' and 'attribute' properties must be specified.");
-		}
 		UploadAssets::register($this->getView());
+
+        if(!$this->id )
+        {
+            $class = explode('\\',get_class($this->model));
+            $this->id = array_pop($class). '-form';
+        }
+
 	}
 
 	public function run()
@@ -54,16 +49,13 @@ class Upload extends Widget
 			$this->options['multiple'] = true;
 		}
 
-		echo $this->render($this->form,[
-			'model'   => $this->model,
-			'name'    => $this->name,
-
-			'options' => $this->options,
-
+		return $this->render($this->view ,[
+            'id'        => $this->id,
+            'url'       => $this->url,
+			'model'     => $this->model,
+			'options'   => $this->options,
 			'label_btn' => $this->label_btn,
-
 		]);
-
 	}
 
 	/**

@@ -416,4 +416,59 @@ class Storage
 		return $path['dirname'].'/'.$size.$path_part;
 	}
 
+
+    /**
+     * Возвращает url на фотку из storage, если фотку шириной $width не существует, создает ее.
+     * Storage::instance('photo')->img($path, $width, true);
+     * $path = '17/c9/e0/96/38/17c9e09638917af7d932cf9130603397.jpg'; файл, сохраненный в бд
+     * $width = 118 или array(118, 178) - ширина фотки
+     * $cap = true/false - если файла нет использовать или нет заглушку
+     *
+     * @param      $path
+     * @param null $width
+     * @param bool $cap
+     *
+     * @return bool|string
+     *
+    public function img($rel_path, $width = null, $cap = false)
+    {
+        $path = $this->normalize($rel_path);
+        if (is_file($path))
+        {
+            if ($width == null) return $rel_path;
+
+            if (is_numeric($width) && $width > 0)
+            {
+                $pathinfo = pathinfo($path);
+                $file = $pathinfo['dirname'].DIRECTORY_SEPARATOR.$width.$this->_delimiter.$pathinfo['basename'];
+                if (!is_file($file))
+                {
+                    try
+                    {
+                        $imagine = new \Imagine\Gd\Imagine();
+                        $img = $imagine->open($path);
+                        $size = $img->getSize();
+                        $img->resize(new \Imagine\Image\Box($width, $width * $size->getHeight() / $size->getWidth()))
+                            ->save($file, array('quality' => 80));
+                        @chmod($file, 0777);
+                    }
+                    catch (Exception $e)
+                    {
+                        return false;
+                    }
+                }
+
+                $path = $this->rel_path($file);
+
+                $a = $this->_baseUrl.DIRECTORY_SEPARATOR.$path;
+
+                return $this->_baseUrl.DIRECTORY_SEPARATOR.$path;
+            }
+
+            return false;
+        }
+    }*/
+
+
+
 }

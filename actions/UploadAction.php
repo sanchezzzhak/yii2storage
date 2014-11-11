@@ -19,7 +19,6 @@ use yii\helpers\Url;
 
 /**
  * example use controller this uploading
- *
  	```php
  		public function actions()
  		{
@@ -43,10 +42,15 @@ class UploadAction extends Action {
 	public $path;
 	public $public_path;
 
+
+    public $image_height_max = 0;
+    public $image_width_max  = 0;
+
+    public $random_name = true;
+
 	public function init()
 	{
 		parent::init();
-		$base_path = Yii::$app->getBasePath();
 
 		if (!is_dir($this->path))
 		{
@@ -80,14 +84,11 @@ class UploadAction extends Action {
 
 	public function run()
 	{
-
 		$this->sendHeaders();
-		$this->handleUploading();
+		return $this->handleUploading();
 	}
 
-	/**
-	 *
-	 */
+
 	protected function sendHeaders()
 	{
 		header('Vary: Accept');
@@ -98,12 +99,15 @@ class UploadAction extends Action {
 		}
 	}
 
+    /**
+     * @return string
+     */
 	protected function handleUploading()
 	{
 		$model = $this->form_model;
 		if(! $file = UploadedFile::getInstance($model,'file'))
 		{
-			return false;
+			return null;
 		}
 
         /** @var \kak\storage\models\UploadForm $model */
@@ -111,25 +115,26 @@ class UploadAction extends Action {
 		if($model->validate())
 		{
 			$path = $this->path;
+
+            $ext = pathinfo($model->file, PATHINFO_EXTENSION);
+            if($this->random_name)
+            {
+                $model->file = Yii::$app->security->generateRandomString(). ".{$ext}";
+            }
+
 			$path_file = $path . $model->file;
 
-			if (!is_dir($path))
-			{
-				mkdir($path, 0777, true);
-				chmod($path, 0777);
-			}
 			if(!empty($path_file) && $file->saveAs($path_file ))
 			{
 				chmod($path_file , 0666);
-
 				$returnValue = $this->beforeReturn();
-				if ($returnValue === true) {
-				// Image size
+				if ($returnValue === true)
+                {
 					list($width, $height) = @getimagesize($path_file);
 
 					$json = [
 						"name" => $model->file,
-						"type" => $model->type,
+						"type" => $model->mime_type,
 						"size" => $model->size,
 						"url"  => $this->public_path . $model->file,
 
@@ -146,13 +151,20 @@ class UploadAction extends Action {
 						"width"   => isset($width) ? $width : 0,
 						"height"  => isset($height) ? $height : 0,
 					];
-
 					return json_encode($json);
 				}
 
 			}
 		}
 	}
+
+
+    private function resize_image($file, $width = null, $height = null )
+    {
+
+
+    }
+
 
 	protected function beforeReturn()
 	{

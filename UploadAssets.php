@@ -10,9 +10,6 @@ class UploadAssets extends \yii\web\AssetBundle
 		'fileupload/jquery.iframe-transport.js',
 		'fileupload/jquery.fileupload.js',
 		'fileupload/jquery.fileupload-process.js',
-		'fileupload/jquery.fileupload-image.js',
-		'fileupload/jquery.fileupload-audio.js',
-		'fileupload/jquery.fileupload-video.js',
 		'fileupload/jquery.fileupload-validate.js',
 		'fileupload/jquery.fileupload-ui.js',
 	];
@@ -21,6 +18,6 @@ class UploadAssets extends \yii\web\AssetBundle
 	];
 
 	public $depends = [
-		'yii\jui\CoreAsset',
+		'yii\jui\JuiAsset',
 	];
 }
