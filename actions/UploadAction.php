@@ -104,14 +104,17 @@ class UploadAction extends Action {
      */
 	protected function handleUploading()
 	{
+        $result = [];
+        /** @var \kak\storage\models\UploadForm $model */
 		$model = $this->form_model;
 		if(! $file = UploadedFile::getInstance($model,'file'))
 		{
 			return null;
 		}
 
-        /** @var \kak\storage\models\UploadForm $model */
 		$model->file = $file->name;
+        $model->size = $file->size;
+
 		if($model->validate())
 		{
 			$path = $this->path;
@@ -120,6 +123,7 @@ class UploadAction extends Action {
             if($this->random_name)
             {
                 $model->file = Yii::$app->security->generateRandomString(). ".{$ext}";
+
             }
 
 			$path_file = $path . $model->file;
@@ -132,7 +136,7 @@ class UploadAction extends Action {
                 {
 					list($width, $height) = @getimagesize($path_file);
 
-					$json = [
+                    $result = [
 						"name" => $model->file,
 						"type" => $model->mime_type,
 						"size" => $model->size,
@@ -151,19 +155,14 @@ class UploadAction extends Action {
 						"width"   => isset($width) ? $width : 0,
 						"height"  => isset($height) ? $height : 0,
 					];
-					return json_encode($json);
 				}
-
 			}
 		}
+        $result['errors'] = $model->getErrors();
+
+        return $result;
 	}
 
-
-    private function resize_image($file, $width = null, $height = null )
-    {
-
-
-    }
 
 
 	protected function beforeReturn()

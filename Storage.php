@@ -152,7 +152,7 @@ class Storage
 	 */
 	public static function has_id($path)
 	{
-		$config = Yii::$app->storage['storage'];
+		$config = Yii::$app->params['storage'];
 		$storages = array_keys($config['storages']);
 		$basePath = realpath($config['basePath']);
 

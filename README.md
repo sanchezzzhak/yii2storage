@@ -36,16 +36,16 @@ to the require section of your `composer.json` file.
 Usage
 -----
 
-Once the extension is installed, simply use it in your code by  :
+Once the extension is installed, simply use it in your code by:
 
 ```php
+/** @var kak\storage\models\UploadForm $model */
 <?= \kak\storage\Upload::widget([
     'model' => $model
 ]); ?>
 ```
-@todo api options widget
 
- example use controller this uploading
+Example use controller this uploading
 ```php
     public function actions()
     {
@@ -61,7 +61,7 @@ Once the extension is installed, simply use it in your code by  :
     }
 ```
 
-Custom run action
+Custom run action uploading
 ```php
     $action = new \kak\storage\actions\UploadAction($this->id, $this, [
         'form_name' => 'kak\storage\models\UploadForm',
