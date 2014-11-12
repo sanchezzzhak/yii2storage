@@ -12,6 +12,7 @@ class UploadAssets extends \yii\web\AssetBundle
 		'fileupload/jquery.fileupload-process.js',
 		'fileupload/jquery.fileupload-validate.js',
 		'fileupload/jquery.fileupload-ui.js',
+		'upload.js',
 	];
 	public $css = [
 		'storage.css',

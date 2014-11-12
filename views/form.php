@@ -3,20 +3,20 @@
     /** @var $this \yii\web\View */
 ?>
 
-<div class="yii2upload" id="<?=$id?>">
+<div class="yii2upload"
+     data-url="/upload"
+     data-autoUpload="true">
     <div>
         <span class="btn fileinput-button">
             <i class="glyphicon glyphicon-plus"></i>
             <span><?=$label_btn?></span><?=Html::activeFileInput($model, 'file', $options) . "\n"; ?>
         </span>
     </div>
-    <table class="upload-container" role="presentation">
-
-    </table>
+    <div class="preview"></div>
 </div>
 <?php
-$js_code = <<<CODE
-    var _form = $('#$id input[type="file"]');
+/*$js_code = <<<CODE
+    var _form = $('yii2upload input[type="file"]');
     _form.fileupload({
         autoUpload  : true,
         url         : '$url',
@@ -29,11 +29,16 @@ $js_code = <<<CODE
 
         },
         done: function (e, data) {
-
+            var result = data.result;
+            console.log(result);
+            if(result.image_preview_url.length > 0 )
+            {
+                $('#$id .preview').html('<img src="'+ result.image_preview_url +'">');
+            }
         }
     });
 CODE;
-$this->registerJs($js_code);
+$this->registerJs($js_code);*/
 ?>
 
 <script id="template-upload" type="text/x-tmpl">

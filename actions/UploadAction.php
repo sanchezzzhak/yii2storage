@@ -25,23 +25,23 @@ use kak\storage\Storage;
 ```php
 public function actions()
 {
-return [
-'upload' => [
-'class' => 'kak\storage\actions\UploadAction',
-// validation model and Set attributes model
-'form_name' => 'kak\storage\models\UploadForm',
+    return [
+        'upload' => [
+            'class' => 'kak\storage\actions\UploadAction',
+            // validation model and Set attributes model
+            'form_name' => 'kak\storage\models\UploadForm',
 
-// custom save file to path
-//'path'  => Yii::$app->getBasePath() . '/web/uploads',
-//'public_path' => '/uploads/',
-//'random_name' => true,
+            // custom save file to path
+            //'path'  => Yii::$app->getBasePath() . '/web/uploads',
+            //'public_path' => '/uploads/',
+            //'random_name' => true,
 
-// save file use Storage id=tmp
-'storage' => 'tmp',
+            // save file use Storage id=tmp
+            'storage' => 'tmp',
 
-'successCallback' => [$this, 'successCallback'],
-],
-];
+            'successCallback' => [$this, 'successCallback'],
+        ],
+    ];
 }
 ```
  */
@@ -57,8 +57,8 @@ class UploadAction extends Action {
 
     public $storage = null;
 
-    public $image_preview_height = 320;
-    public $image_preview_width = 420;
+    public $image_preview_height = 600;
+    public $image_preview_width  = 600;
 
     public $image_width_max = 1024;
     public $image_height_max = 768;
@@ -131,6 +131,14 @@ class UploadAction extends Action {
         }
     }
 
+
+    protected function _methodCrop()
+    {
+
+
+    }
+
+
     /**
      * @return string
      */
@@ -164,6 +172,8 @@ class UploadAction extends Action {
 
             $path_file =  rtrim($this->path,DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . $model->file;
 
+
+
             if(!count($model->getErrors()) && $file->error == 0 && $file->saveAs($path_file))
             {
 
@@ -171,12 +181,18 @@ class UploadAction extends Action {
                 $returnValue = $this->beforeReturn();
                 if ($returnValue === true)
                 {
-
+                    $image_preview = '';
                     list($width, $height) = @getimagesize($path_file);
                     if($width > 0 || $height > 0)
                     {
                         $this->resizeImageMaxOptimisation($path_file);
                         list($width, $height) = @getimagesize($path_file);
+
+                        $info_preview = pathinfo($model->file);
+                        $image_preview = $info_preview['dirname'] . '/' . 'preview_'.$info_preview['basename'];
+
+                        $path_preview_file = rtrim($this->path,DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . $image_preview;
+                        $this->resizeImagePreview($path_file , $path_preview_file);
                     }
 
                     $result = [
@@ -184,7 +200,9 @@ class UploadAction extends Action {
                         "type" => $model->mime_type,
                         "size" => $model->size,
                         "url"  => $this->public_path . $model->file,
-                        "image_preview" => "",
+
+                        "image_preview" => $image_preview,
+                        "image_preview_url" => (!empty($image_preview)) ? $this->public_path . $image_preview : '',
 
                         "delete_url"  => Url::to([$this->id,
                             "_method" => "delete",
@@ -211,6 +229,33 @@ class UploadAction extends Action {
     {
         $path = $this->path;
         return true;
+    }
+
+
+    protected  function resizeImagePreview($path , $path_preview_file)
+    {
+        $imagine = new \Imagine\Gd\Imagine;
+        $img = $imagine->open($path);
+        $size = $img->getSize();
+
+        $width= $size->getWidth();
+        $height =  $size->getHeight();
+
+        if( $size->getWidth() >= $size->getHeight() )
+        {
+            $width = $this->image_preview_width;
+            $height = $this->image_preview_width * $size->getHeight() / $size->getWidth();
+
+        }
+        else if( $size->getWidth() <= $size->getHeight() )
+        {
+            $width =  $this->image_preview_height *  $size->getWidth() / $size->getHeight();
+            $height = $this->image_preview_height;
+        }
+
+        $img->resize(new \Imagine\Image\Box($width, $height) )
+            ->save($path_preview_file, ['quality' => 100]);
+
     }
 
     /**

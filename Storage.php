@@ -307,6 +307,7 @@ class Storage
         return $filedir.DIRECTORY_SEPARATOR.$filename;
     }
 
+
     /**
      *  Save file to path
      *
@@ -440,8 +441,8 @@ class Storage
         $path = pathinfo($path);
         $size = (!$width && !$height) ? '' : $width ."x".$height;
         $path_part = preg_replace('#[0-9]{1,3}x[0-9]{1,3}_#ixs', '', $path['basename']);
+        return $path['dirname'].'/'.$size."_".$path_part;
 
-        return $path['dirname'].'/'.$size.$path_part;
     }
 
 
@@ -460,30 +461,30 @@ class Storage
      *
     public function img($rel_path, $width = null, $cap = false)
     {
-    $path = $this->normalize($rel_path);
-    if (is_file($path))
-    {
-    if ($width == null) return $rel_path;
+        $path = $this->normalize($rel_path);
+        if (is_file($path))
+        {
+        if ($width == null) return $rel_path;
 
-    if (is_numeric($width) && $width > 0)
-    {
-    $pathinfo = pathinfo($path);
-    $file = $pathinfo['dirname'].DIRECTORY_SEPARATOR.$width.$this->_delimiter.$pathinfo['basename'];
-    if (!is_file($file))
-    {
-    try
-    {
-    $imagine = new \Imagine\Gd\Imagine();
-    $img = $imagine->open($path);
-    $size = $img->getSize();
-    $img->resize(new \Imagine\Image\Box($width, $width * $size->getHeight() / $size->getWidth()))
-    ->save($file, array('quality' => 80));
-    @chmod($file, 0777);
-    }
-    catch (Exception $e)
-    {
-    return false;
-    }
+        if (is_numeric($width) && $width > 0)
+        {
+        $pathinfo = pathinfo($path);
+        $file = $pathinfo['dirname'].DIRECTORY_SEPARATOR.$width.$this->_delimiter.$pathinfo['basename'];
+        if (!is_file($file))
+        {
+        try
+        {
+        $imagine = new \Imagine\Gd\Imagine();
+        $img = $imagine->open($path);
+        $size = $img->getSize();
+        $img->resize(new \Imagine\Image\Box($width, $width * $size->getHeight() / $size->getWidth()))
+        ->save($file, array('quality' => 80));
+        @chmod($file, 0777);
+        }
+        catch (Exception $e)
+        {
+        return false;
+        }
     }
 
     $path = $this->rel_path($file);
