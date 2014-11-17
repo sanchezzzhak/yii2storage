@@ -7,6 +7,7 @@ class UploadAssets extends \yii\web\AssetBundle
 
 	public $js = [
 		'fileupload/vendor/jquery.ui.widget.js',
+        'fileupload/tmpl.js',
 		'fileupload/jquery.iframe-transport.js',
 		'fileupload/jquery.fileupload.js',
 		'fileupload/jquery.fileupload-process.js',

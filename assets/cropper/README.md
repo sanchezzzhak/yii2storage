@@ -1,0 +1,442 @@
+# [Image Cropper](http://fengyuanchen.github.io/cropper)
+
+A simple jQuery image cropping plugin.
+
+- [Documentation](http://fengyuanchen.github.io/cropper)
+- [Demo](http://fengyuanchen.github.io/cropper#overview)
+
+
+# Features
+
+- Supports touch
+- Supports zoom
+- Supports rotation
+- Supports canvas
+- Supports [options](#options)
+- Supports [methods](#methods)
+- Supports [events](#events)
+- Cross-browser support
+
+
+# Main
+
+```
+dist/
+├── cropper.css     ( 5 KB)
+├── cropper.min.css ( 4 KB)
+├── cropper.js      (40 KB)
+└── cropper.min.js  (16 KB)
+```
+
+
+# Getting started
+
+## Quick start
+
+Four quick start options are available:
+
+- [Download the latest release](https://github.com/fengyuanchen/cropper/archive/master.zip).
+- Clone the repository: `git clone https://github.com/fengyuanchen/cropper.git`.
+- Install with [NPM](http://npmjs.org): `npm install cropper`.
+- Install with [Bower](http://bower.io): `bower install cropper`.
+
+
+## Installation
+
+Include files:
+
+```html
+<script src="/path/to/jquery.js"></script><!-- jQuery is required -->
+<link  href="/path/to/cropper.css" rel="stylesheet">
+<script src="/path/to/cropper.js"></script>
+```
+
+
+## Usage
+
+Initialize with `$.fn.cropper` method.
+
+```html
+<!-- Wrap the image or canvas with a block element -->
+<div class="container">
+  <img src="picture.jpg">
+</div>
+```
+
+```javascript
+$(".container > img").cropper({
+  aspectRatio: 16 / 9,
+  done: function(data) {
+    // Crop image with the result data.
+  }
+});
+```
+
+**Notes:**
+- The size of the cropper inherits from the size of the image's parent element, so be sure to wrap the image with a visible block element.
+- The values of the result data was computed with the original size of the image, so you can use them to crop the image directly.
+
+
+## Options
+
+You may set cropper options with `$().cropper(options)`.
+If you want to change the global default options, You may use `$.fn.cropper.setDefaults(options)`.
+
+
+#### aspectRatio
+
+- type: string / number
+- default: "auto"
+
+The aspect ratio of the cropping zone.
+By default, the cropping zone is free ratio.
+
+
+#### data
+
+- type: object
+- options: "x", "y", "width", "height"
+- default: {}
+
+By default, the cropping zone will appear in the center of the image.
+If you already have values of the last crop and you want to apply them, just set them as option.
+
+For example:
+
+```javascript
+{
+  x: 100,
+  y: 50,
+  width: 480,
+  height: 270
+}
+```
+
+#### done
+
+- type: function
+- default: function(data) {}
+
+This function will be executed when the cropping zone changes by a move, resize or crop.
+
+
+#### preview
+
+- type: selector
+- default: ""
+
+A jquery selector, add extra elements for a preview.
+
+
+#### multiple
+
+- type: boolean
+- default: false
+
+By default, the plugin only supports one cropper per page. If you intend to use more than one, just initialize them with this option set to `true`.
+
+
+#### modal
+
+- type: boolean
+- default: true
+
+Show (true) or hide (false) the black modal layer above the cropper.
+
+
+#### dashed
+
+- type: boolean
+- default: true
+
+Show (true) or hide (false) the dashed lines above the cropping zone.
+
+
+#### autoCrop
+
+- type: boolean
+- default: true
+
+Render the cropping zone automatically when initialize.
+
+
+#### dragCrop
+
+- type: boolean
+- default: true
+
+Enable to remove the current cropping zone and create a new one by dragging over the image.
+
+
+#### movable
+
+- type: boolean
+- default: true
+
+Enable to move the cropping zone.
+
+
+#### resizable
+
+- type: boolean
+- default: true
+
+Enable to resize the cropping zone.
+
+
+#### zoomable
+
+- type: boolean
+- default: true
+
+Enable to zoom the image.
+
+
+#### rotatable
+
+- type: boolean
+- default: true
+
+Enable to rotate the image.
+
+
+#### minWidth
+
+- type: number
+- default: 0
+
+The minimum width (px of original image) of the cropping zone.
+Use this option only when you are sure that the image has this minimum width.
+
+
+#### minHeight
+
+- type: number
+- default: 0
+
+The minimum height (px of original image) of the cropping zone.
+Use this option only when you are sure that the image has this minimum height.
+
+
+#### maxWidth
+
+- type: number
+- default: Infinity
+
+The maximum width (px of original image) of the cropping zone.
+Use this option only when you are sure that the image has this maximum width.
+
+
+#### maxHeight
+
+- type: number
+- default: Infinity
+
+The maximum height (px of original image) of the cropping zone.
+Use this option only when you are sure that the image has this maximum height.
+
+
+#### build
+
+- type: function
+- default: null
+
+An event handler of the "build.cropper" event.
+
+
+#### built
+
+- type: function
+- default: null
+
+An event handler of the "built.cropper" event.
+
+
+#### dragstart
+
+- type: function
+- default: null
+
+An event handler of the "dragstart.cropper" event.
+
+
+#### dragmove
+
+- type: function
+- default: null
+
+An event handler of the "dragmove.cropper" event.
+
+
+#### dragend
+
+- type: function
+- default: null
+
+An event handler of the "dragend.cropper" event.
+
+
+## Methods
+
+#### zoom
+
+- Zoom the image.
+- Param: a number (positive number for zoom in, negative number for zoom out).
+- Usage: `$().cropper("zoom", 0.1)` or `$().cropper("zoom", -0.1)`.
+
+
+#### rotate
+
+- Rotate the image (Replace the original image with a new rotated image which was generated by canvas).
+- Param: a number (positive number for rotate right, negative number for rotate left).
+- Usage: `$().cropper("rotate", 90)` or `$().cropper("rotate", -90)`.
+- Note: Be sure the browser supports canvas before call this method.
+
+
+#### enable
+
+- Enable (unfreeze) the cropper.
+- Usage: `$().cropper("enable")`.
+
+
+#### disable
+
+- Disable (freeze) the cropper.
+- Usage: `$().cropper("disable")`.
+
+
+#### reset
+
+- Reset the cropping zone to the start state.
+- Add a `true` param to reset the cropping zone to the default state.
+- Usage: `$().cropper("reset")` or `$().cropper("reset", true)`.
+
+
+#### clear
+
+- Clear the cropping zone.
+- Usage: `$().cropper("clear")`.
+
+
+#### replace
+
+- Replace the image.
+- Param: a url.
+- Usage: `$().cropper("replace", "example.jpg")`.
+
+
+#### destroy
+
+- Destroy the cropper and remove the instance from the image.
+- Usage: `$().cropper("destroy")`.
+
+
+#### getData
+
+- Get the cropped zone data.
+- Usage: `$().cropper("getData")`.
+
+
+#### setData
+
+- Reset the cropped zone with new data.
+- Param: an object containing: "x", "y", "width", "height".
+- Use with `$().cropper("setData", {width: 480, height: 270})`.
+
+**Tip:** If you want to remove the current data, just pass an empty object or `null`. For example: `$().cropper("setData", {})` or `$().cropper("setData", null)`.
+
+
+#### setAspectRatio
+
+- Enable to reset the aspect ratio after built.
+- Param: "auto" or a positive number ("auto" for free ratio).
+- Usage: `$().cropper("setAspectRatio", 1.618)`.
+
+
+#### getImageData
+
+- Get an object containing image data, contains: "naturalWidth", "naturalHeight", "width", "height", "aspectRatio", "ratio".
+- The "aspectRatio" is the value of "naturalWidth / naturalHeight".
+- The "ratio" is the value of "width / naturalWidth".
+- Usage: `$().cropper("getImageData")`.
+
+
+#### setDragMode
+
+- Change the drag mode.
+- Params: "crop", "move" and "none".
+- Usage: `$().cropper("setDragMode", "crop")`.
+
+**Tip**: You can toggle the "crop" and "move" mode by double click on the image.
+
+
+#### getDataURL
+
+- Get the data url of the cropped zone (Rotation is not supported).
+- Param: the same as `canvas.toDataURL`.
+- Usage: `$().cropper("getDataURL")` or `$().cropper("getDataURL", "image/jpeg")` or `$().cropper("getDataURL", "image/jpeg", 0.8)`.
+- Note: Be sure the browser supports canvas before call this method.
+
+
+## Events
+
+
+#### build.cropper
+
+This event will be fired when the Cropper starts to build.
+
+
+#### built.cropper
+
+This event will be fired when the Cropper has been built.
+
+
+#### dragstart.cropper
+
+This event will be fired before the cropping zone start to move.
+
+Related events: "mousedown", "touchstart".
+
+
+#### dragmove.cropper
+
+This event will be fired when the cropping zone was moving.
+
+Related events: "mousemove", "touchmove".
+
+
+#### dragend.cropper
+
+This event will be fired after the cropping zone stop to move.
+
+Related events: "mouseup", "mouseleave", "touchend", "touchleave", "touchcancel".
+
+
+## No conflict
+
+If you have to use other plugin with the same namespace, just call the `$.fn.cropper.noConflict` method to revert to it.
+
+```
+<script src="other-plugin.js"></script>
+<script src="cropper.js"></script>
+<script>
+$.fn.cropper.noConflict();
+// Code that uses other plugin's "$().cropper" can follow here.
+</script>
+```
+
+
+## Browser Support
+
+- Chrome 36+
+- Firefox 31+
+- Internet Explorer 8+
+- Opera 21+
+- Safari 5.1+
+
+As a jQuery plugin, you can reference to the [jQuery Browser Support](http://jquery.com/browser-support/).
+
+
+## [License](https://github.com/fengyuanchen/cropper/blob/master/LICENSE.md)
+
+Released under the [MIT](http://opensource.org/licenses/mit-license.html) license.
