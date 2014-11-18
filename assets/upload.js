@@ -44,7 +44,7 @@ $(function(){
 
                 data.context = $(tmpl("tmpl-add", odata));
 
-                if( $this.find(yii2upload).data('singleupload') ){
+                if( $this.find(_class).data('singleupload') ){
                     conteiner.html(data.context);
                 }else{
                     data.context.appendTo(conteiner);
@@ -91,7 +91,7 @@ $(function(){
                             box.removeClass('hide').addClass('show');
                         });
                         // crop event init
-                        if(data.context.closest(yii2upload).data('crop'))
+                        if($this.find(_class).data('crop'))
                         {
                             data.context.find('.crop').on('click',function() {
                                 $(this).closest(_item).find('.preview-box > img').off().cropper({
@@ -107,7 +107,7 @@ $(function(){
 
                             var box = $(this).closest(_item).find('.preview-box');
 
-                            if($(this).closest(yii2upload).data('crop') && box.find('.cropper-container').length > 0  ) {
+                            if($this.find(_class).data('crop') && box.find('.cropper-container').length > 0  ) {
                                 $(this).closest(_item).find('.preview-box > img').cropper("destroy");
                                 return false;
                             }
