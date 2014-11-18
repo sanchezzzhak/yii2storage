@@ -32,8 +32,10 @@ class Upload extends Widget
 	public $multiple = true;
 	public $max_uploads = 2;
 
-    public $crop = true;
+    public $progressbarall = false;
 
+    public $crop = true;
+    public $single_upload = true;
 
     public $options = [];
 	public $label_btn = 'Add files...';
@@ -59,14 +61,6 @@ class Upload extends Widget
 	{
         $this->options['multiple']  = ($this->multiple == true);
 
-        $preview = '';
-        if(!empty($this->model->file))
-        {
-            $path_info = pathinfo($this->model->file);
-            if(in_array($path_info['extension'],['gif','png','jpg','jpeg']))
-                $preview  = \yii\helpers\Html::img( $path_info['dirname'] . '/' . 'preview_'.$path_info['basename'] );
-        }
-
 		return $this->render($this->view ,[
             'url'         => $this->url,
             'multiple'    => $this->multiple,
@@ -74,8 +68,9 @@ class Upload extends Widget
 			'model'       => $this->model,
             'options'     => $this->options,
 			'label_btn'   => $this->label_btn,
-            'preview'     => $preview,
             'crop'        => $this->crop,
+            'progressbarall' => $this->progressbarall,
+            'single_upload' => $this->single_upload,
 		]);
 	}
 

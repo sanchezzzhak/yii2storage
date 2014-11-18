@@ -27,12 +27,8 @@ $(function(){
             uploadTemplateId: null,
             downloadTemplateId: null,
             progressall: function (e, data) {
-                console.log(data);
-
                 var progress = parseInt(data.loaded / data.total * 100, 10);
                 $(this).find('.progress .bar').css('width',progress + '%');
-
-
             },
             add: function (e, data) {
                 if (e.isDefaultPrevented()) {
@@ -40,13 +36,19 @@ $(function(){
                 }
                 var $this = $(this);
                 var conteiner = $this.find('.files');
+
                 var odata = {
                     files: data.files,
                     autoUpload: $(this).find(_class).data('autoupload')
                 };
 
                 data.context = $(tmpl("tmpl-add", odata));
-                data.context.appendTo(conteiner);
+
+                if( $this.find(yii2upload).data('singleupload') ){
+                    conteiner.html(data.context);
+                }else{
+                    data.context.appendTo(conteiner);
+                }
 
                 data.process(function () {
                     return $this.fileupload('process', data);
@@ -58,18 +60,16 @@ $(function(){
                     }).removeClass('processing');
                 }).done(function () {
                     data.context.find('.start').prop('disabled', false);
-
                     if(odata.autoUpload) data.submit();
-
                 });
             },
 
             done: function (e, data) {
 
                 var $this = $(this);
-                        console.log(data);
                 if (data.context) {
                     $(data.context).each(function (index) {
+
                         var file = data.files[index] || {error: 'Empty file upload result'};
                         var node = $(this);
                         var odata = {
@@ -78,34 +78,41 @@ $(function(){
                             formatFileSize: _formatFileSize,
                             autoUpload: $(this).find(_class).data('autoupload')
                         };
+
+
                         data.context = $(tmpl("tmpl-download", odata)).replaceAll(node);
 
+                        data.context.find('.meta').val( JSON.stringify(odata.result) );
+
+                        // preview show
                         data.context.find('a.preview').on('click', function(){
                             $(this).hide();
                             var box = $(this).closest(_item).find('.preview-box');
                             box.removeClass('hide').addClass('show');
                         });
-
-                        data.context.find('.crop').on('click',function() {
-                            $(this).closest(_item).find('.preview-box > img').cropper({
-                                autoCropArea: 0.6,
-                                zoomable:false
-                            }).on('resize.cropper', function(e){
-                                $(this).closest(_item).find('.cropper-container').css('top',0).css('left',0);
+                        // crop event init
+                        if(data.context.closest(yii2upload).data('crop'))
+                        {
+                            data.context.find('.crop').on('click',function() {
+                                $(this).closest(_item).find('.preview-box > img').off().cropper({
+                                    autoCropArea: 0.6,
+                                    zoomable:false
+                                }).on('resize.cropper, built.cropper', function(){
+                                    $(this).closest(_item).find('.cropper-container').css('top',0).css('left',0);
+                                });
                             });
-
-
-                        });
-
+                        }
+                        // crop cancel or hide preview
                         data.context.find('.crop-cancel').on('click',function() {
+
                             var box = $(this).closest(_item).find('.preview-box');
-                                //box.removeClass('show').addClass('hide');
-                            if( box.find('.cropper-container').length > 0  ) {
+
+                            if($(this).closest(yii2upload).data('crop') && box.find('.cropper-container').length > 0  ) {
                                 $(this).closest(_item).find('.preview-box > img').cropper("destroy");
-                            } else {
-                                box.removeClass('show').addClass('hide');
-                                $(this).closest(_item).find('a.preview').show();
+                                return false;
                             }
+                            box.removeClass('show').addClass('hide');
+                            $(this).closest(_item).find('a.preview').show();
                         });
 
                     });

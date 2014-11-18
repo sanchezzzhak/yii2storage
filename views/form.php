@@ -1,12 +1,48 @@
 <?php
     use yii\helpers\Html;
     /** @var $this \yii\web\View */
+
+$function_download_tmpl = function($model = null , $isJS = true , $options = []) {
+
+    $js = ($isJS? '{% for (var i=0, file; file = o.files[i]; i++) { %}' : '');
+    $js.= '<div class="template-upload">';
+    $js.= ($isJS? '{% if( o.result.errors.length > 0){ %}':'');
+
+    $js.= ($isJS? '{% } else { %}': '');
+    $js.= '<p>File :{%=file.name%} <span class="size">{%=o.formatFileSize(file.size)%}</span>  uploaded success</p>
+            <div class="act">
+                <a class="cancel btn inline" href="javascript:;">Delete</a>
+            </div>';
+
+    $js.= Html::hiddenInput('meta[]', $model->meta, ['class'=>'meta']) . "\n";
+    $js.= ($isJS ? '{% if(o.result.image_preview_url.length > 0 ) { %}':'');
+
+    $js.= '<span>
+                <a class="preview" href="javascript:;"><img src="{%=o.result.thumbnail_url%}"></a>
+                <div class="preview-box hide">
+                    <div class="act">';
+    $js.= (isset($options['crop']) && $options['crop']) ? '<a href="javascript:;" class="crop btn inline" data-url="{%=o.result.crop_url%}">Crop</a>'."\n": '';
+    $js.= '<a href="javascript:;" class="crop-cancel btn inline">Cancel</a>'."\n";
+
+    $js.= '         </div>
+                    <img src="{%=o.result.image_preview_url%}">
+                </div>
+            </span>';
+
+    $js.=  ($isJS? '
+            {% } %}
+        {% } %}': '');
+    $js.=' </div>';
+    $js.= ($isJS? '{% } %}':'');
+    echo $js;
+};
 ?>
 
 <div class="yii2upload"
      data-url="<?=$url?>"
      data-multiple="<?=($multiple?1:0)?>"
      data-crop="<?=($crop? 1:0)?>"
+     data-singleupload="<?=($single_upload? 1:0)?>"
      data-autoupload="<?=($auto_upload ? 1: 0)?>">
     <div>
         <span class="btn fileinput-button">
@@ -15,7 +51,9 @@
             <?=Html::activeFileInput($model, 'file', $options) . "\n"; ?>
         </span>
     </div>
-    <div class="progress" role="progressbar" aria-valuemin="0" aria-valuemax="100"><div class="bar" style="width: 0%"><span></span></div></div>
+    <?php if($progressbarall):?>
+        <div class="progress" role="progressbar" aria-valuemin="0" aria-valuemax="100"><div class="bar" style="width: 0%"><span></span></div></div>
+    <?php endif;?>
     <div role="presentation" class="files"></div>
 </div>
 
@@ -45,30 +83,5 @@
     {% } %}
 </script>
 <script id="tmpl-download" type="text/x-tmpl">
-{% for (var i=0, file; file = o.files[i]; i++) { %}
-     <div class="template-upload">
-         {% if( o.result.errors.length > 0){ %}
-             <p>File :{%=file.name%} uploaded error</p>
-             <strong class="error text-danger"></strong>
-        {% } else { %}
-            <p>File :{%=file.name%} <span class="size">{%=o.formatFileSize(file.size)%}</span>   uploaded success</p>
-             <div class="act">
-                <a class="cancel btn inline" href="javascript:;">Delete</a>
-            </div>
-            {% if(o.result.image_preview_url.length > 0 ) { %}
-                <span>
-                    <a class="preview" href="javascript:;"><img src="{%=o.result.thumbnail_url%}"></a>
-                    <div class="preview-box hide">
-                        <div class="act">
-                             <a href="javascript:;" class="crop btn inline" data-url="{%=o.result.crop_url%}">Crop</a>
-                             <a href="javascript:;" class="crop-cancel btn inline">Cancel</a>
-                        </div>
-                        <img src="{%=o.result.image_preview_url%}">
-                    </div>
-                </span>
-            {% } %}
-        {% } %}
-
-     </div>
-{% } %}
+    <?php $function_download_tmpl($model,true,['crop'=> $crop]); ?>
 </script>

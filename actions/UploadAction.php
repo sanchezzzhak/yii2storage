@@ -30,15 +30,9 @@ public function actions()
             'class' => 'kak\storage\actions\UploadAction',
             // validation model and Set attributes model
             'form_name' => 'kak\storage\models\UploadForm',
-
-            // custom save file to path
-            //'path'  => Yii::$app->getBasePath() . '/web/uploads',
-            //'public_path' => '/uploads/',
-            //'random_name' => true,
-
             // save file use Storage id=tmp
             'storage' => 'tmp',
-
+            'extension_allowed' => kak\storage\actions\UploadAction::$EXTENSION_IMAGE or ['rar','zip','tar']
             'successCallback' => [$this, 'successCallback'],
         ],
     ];
@@ -47,6 +41,9 @@ public function actions()
  */
 
 class UploadAction extends Action {
+
+    public static $EXTENSION_IMAGE = ['gif','png','jpg','jpeg'];
+
 
     public $form_name;
     public $form_model;
@@ -67,6 +64,9 @@ class UploadAction extends Action {
     public $image_height_max = 768;
 
     public $random_name = false;
+
+    public $extension_allowed = [];
+
 
     public function init()
     {
@@ -134,20 +134,6 @@ class UploadAction extends Action {
         }
     }
 
-
-    protected function _methodCrop()
-    {
-
-
-    }
-
-
-    protected function methodDelete()
-    {
-        $file = Yii::$app->request->get('file');
-
-    }
-
     /**
      * @return string
      */
@@ -156,27 +142,7 @@ class UploadAction extends Action {
 
         $result = [];
         /** @var \kak\storage\models\UploadForm $model */
-
         $method  = Yii::$app->request->get('_method');
-
-        if($method == 'delete')
-        {
-            $this->methodDelete();
-            return;
-        }
-
-        if($method == 'rotate')
-        {
-
-            return;
-        }
-
-        if($method == 'crop')
-        {
-
-            return;
-        }
-
 
         $model = $this->form_model;
         if(! $file = UploadedFile::getInstance($model,'file'))
@@ -189,9 +155,19 @@ class UploadAction extends Action {
         $model->size = $file->size;
         $model->mime_type = $file->type;
 
-        if($model->validate())
+        if($model->validate()) {
+
+            if (count($this->extension_allowed) && !in_array(pathinfo($model->file, PATHINFO_EXTENSION), $this->extension_allowed ))
+            {
+                $model->addError('file','extension file not allowed');
+            }
+        }
+
+        if(!count($model->errors))
         {
             $ext = pathinfo($model->file, PATHINFO_EXTENSION);
+
+
             if($this->storage)
             {
                 $storage = new Storage($this->storage);
@@ -203,8 +179,6 @@ class UploadAction extends Action {
             }
 
             $path_file =  rtrim($this->path,DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . $model->file;
-
-
 
             if(!count($model->getErrors()) && $file->error == 0 && $file->saveAs($path_file))
             {
@@ -234,34 +208,32 @@ class UploadAction extends Action {
 
                     $result = [
                         "name" => $model->file,
+                        "name_display" => $file->name,
                         "type" => $model->mime_type,
                         "size" => $model->size,
                         "url"  => $this->public_path . $model->file,
 
                         "image_preview" => $image_preview,
                         "image_preview_url" => (!empty($image_preview)) ? $this->public_path . $image_preview : '',
-
                         "thumbnail_url" =>  (!empty($image_thumbnail)) ? $this->public_path . $image_thumbnail : '' ,
-
-                        "delete_url"  => Url::to([$this->id,
-                            "_method" => "delete",
-                            "file"    => $model->file
-                        ]),
-
-                        "crop_url"    => Url::to([$this->id,
-                            "_method" => "crop",
-                            "file"    => $model->file
-                        ]),
 
                         "width"   => isset($width) ? $width : 0,
                         "height"  => isset($height) ? $height : 0,
                     ];
+
+                    if((!empty($image_preview)))
+                    {
+                        $result["crop_url"]    = Url::to([$this->id,
+                            "_method" => "crop",
+                            "file"    => $model->file
+                        ]);
+                    }
                 }
             }
         }
-        $result['errors'] = $model->getErrors();
 
-        echo Json::encode($result);
+        $result['errors'] = $model->getErrors();
+        return Json::encode($result);
     }
 
     protected function beforeReturn()

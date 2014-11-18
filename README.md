@@ -70,3 +70,18 @@ Custom run action uploading
     ]);
     return $action->run();
 ```
+
+Server configuration
+deny ngnix
+location ~* ^/(storage|uploads)/.+\.(php|php3|php4|php5|phtml|phps|pl|pm)$ {
+    deny all;
+}
+
+location / {
+    try_files $uri index.php;
+}
+
+
+deny apache, create file htaccess
+php_flag engine 0
+AddType "text/html" .php .cgi .pl .fcgi .fpl .phtml .shtml .php2 .php3 .php4 .php5 .asp .jsp

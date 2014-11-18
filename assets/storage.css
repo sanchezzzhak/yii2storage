@@ -37,7 +37,7 @@
     display: inline-block;
 }
 
-.yii2upload .preview-box > img { width: 100%;}
+.yii2upload .preview-box > img {}
 
 .yii2upload .hide {
     display: none;
@@ -47,7 +47,10 @@
 }
 
 
-
+.yii2upload .template-upload {
+    background: #FAFAFA;
+    padding: 5px;
+}
 
 .yii2upload .progress .bar {
     float: left;

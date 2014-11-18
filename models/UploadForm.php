@@ -12,6 +12,8 @@ class UploadForm extends Model
     public $name;
     public $filename;
 
+    public $meta = '';  // JSON save result storage
+
     /**
      * @return array
      */
@@ -19,6 +21,7 @@ class UploadForm extends Model
     {
         return [
             ['file', 'file'],
+            ['meta','string']
         ];
     }
 
