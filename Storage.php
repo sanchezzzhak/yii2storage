@@ -251,8 +251,6 @@ class Storage
     /**
      * Normalize path:
      * ```php
-     * normalize('/srv/www/vhosts/devel/site.domen/storage/photo/0f/3d/3c/02/d2/0f3d3c02d2859a9f0a3d45916c06c256.jpg')
-     * return '/srv/www/vhosts/devel/site.domen/storage/photo/0f/3d/3c/02/d2/0f3d3c02d2859a9f0a3d45916c06c256.jpg'
      *
      * normalize('photo/0f/3d/3c/02/d2/0f3d3c02d2859a9f0a3d45916c06c256.jpg')
      * return '/srv/www/vhosts/devel/gstnet.site.domen/storage/photo/0f/3d/3c/02/d2/0f3d3c02d2859a9f0a3d45916c06c256.jpg'

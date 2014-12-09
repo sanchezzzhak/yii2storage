@@ -247,7 +247,7 @@ class UploadAction extends Action {
         $imagine = new \Imagine\Gd\Imagine;
         $img = $imagine->open($path);
 
-        $img->thumbnail(new \Imagine\Image\Box($this->image_thumbnail_width, $this->image_thumbnail_height) )
+        $img->thumbnail(new \Imagine\Image\Box($this->image_thumbnail_width, $this->image_thumbnail_height),\Imagine\Image\ImageInterface::THUMBNAIL_OUTBOUND )
             ->save($path_thumbnail_file, ['quality' => 100]);
 
     }

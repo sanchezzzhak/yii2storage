@@ -1,4 +1,13 @@
-.yii2upload input[type=file] {opacity: 0;width: 0;height: 0;}
+.yii2upload input[type=file]
+{
+    opacity: 0;
+    width: 100%;
+    height: 100%;
+    min-height: 25px;
+    position: absolute;
+    left: 0;
+    top: 0;
+}
 
 .yii2upload .image {
     border: 4px solid #ccc;
@@ -9,7 +18,11 @@
     border-radius: 6px;
     margin-right: 20px;
 }
-.yii2upload .fileinput-button {padding: 9px;}
+.yii2upload .fileinput-button {
+    padding: 9px;
+    position: relative;
+    display: block;
+}
 .yii2upload .image .actions  { position: absolute; top: 2px; right: 5px;}
 
 .yii2upload .filelist {margin-top: 20px;}

@@ -79,7 +79,6 @@ $(function(){
                             autoUpload: $(this).find(_class).data('autoupload')
                         };
 
-
                         data.context = $(tmpl("tmpl-download", odata)).replaceAll(node);
 
                         data.context.find('.meta').val( JSON.stringify(odata.result) );
