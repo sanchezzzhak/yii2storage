@@ -23,50 +23,69 @@ use kak\storage\Storage;
 /**
  * example use controller this uploading
 ```php
-public function actions()
-{
-    return [
-        'upload' => [
-            'class' => 'kak\storage\actions\UploadAction',
-            // validation model and Set attributes model
-            'form_name' => 'kak\storage\models\UploadForm',
-            // save file use Storage id=tmp
-            'storage' => 'tmp',
-            'extension_allowed' => kak\storage\actions\UploadAction::$EXTENSION_IMAGE or ['rar','zip','tar']
-            'successCallback' => [$this, 'successCallback'],
-        ],
-    ];
-}
+
+    public function actions()
+    {
+        return [
+            'upload' => [
+                'class' => 'kak\storage\actions\UploadAction',
+                // validation model and Set attributes model
+                'form_name' => 'kak\storage\models\UploadForm',
+                // save file use Storage id=tmp
+                'storage' => 'tmp',
+                'extension_allowed' => kak\storage\actions\UploadAction::$EXTENSION_IMAGE or ['rar','zip','tar']
+            ],
+        ];
+    }
+
+// Custom
+
+    $form_model = new kak\storage\models\UploadForm;
+    $action_method = new \kak\storage\actions\UploadAction($this->id, $this, [
+        'form_model' => $form_model,
+        'header'   => false,
+        'storage'  => 'photo',
+        'extension_allowed' => \kak\storage\actions\UploadAction::$EXTENSION_IMAGE
+    ]);
+    if($result_upload = $action_method->run())
+    {
+
+    }
+
 ```
  */
 
+/**
+ * Class UploadAction
+ * @package kak\storage\actions
+ */
 class UploadAction extends Action {
 
     public static $EXTENSION_IMAGE = ['gif','png','jpg','jpeg'];
 
-
     public $form_name;
     public $form_model;
 
-    /** custom save path */
     public $path;
     public $public_path;
 
+    public $header  = false;
     public $storage = null;
 
     public $image_preview_height = 600;
     public $image_preview_width  = 600;
-
     public $image_thumbnail_width  = 120;
     public $image_thumbnail_height = 120;
-
     public $image_width_max = 1024;
     public $image_height_max = 768;
 
-    public $random_name = false;
+    public $thumbnail_prefix = 'thumbnail_';
+    public $preview_prefix   = 'preview_';
 
     public $extension_allowed = [];
+    public $random_name = false;
 
+    private $_result = [];
 
     public function init()
     {
@@ -117,17 +136,24 @@ class UploadAction extends Action {
         }
     }
 
+    /**
+     * @return string
+     */
     public function run()
     {
-        $this->sendHeaders();
+        if($this->header )
+            $this->sendHeaders();
+
         return $this->handleUploading();
     }
 
-
+    /**
+     * Send header
+     */
     protected function sendHeaders()
     {
         header('Vary: Accept');
-        if (isset($_SERVER['HTTP_ACCEPT']) && (strpos($_SERVER['HTTP_ACCEPT'], 'application/json') !== false)) {
+        if (Yii::$app->request->isAjax && isset($_SERVER['HTTP_ACCEPT']) && (strpos($_SERVER['HTTP_ACCEPT'], 'application/json') !== false)) {
             header('Content-type: application/json');
         } else {
             header('Content-type: text/plain');
@@ -166,8 +192,6 @@ class UploadAction extends Action {
         if(!count($model->errors))
         {
             $ext = pathinfo($model->file, PATHINFO_EXTENSION);
-
-
             if($this->storage)
             {
                 $storage = new Storage($this->storage);
@@ -178,8 +202,8 @@ class UploadAction extends Action {
                 $model->file =  Yii::$app->security->generateRandomString(). ".{$ext}";
             }
 
-            $path_file =  rtrim($this->path,DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . $model->file;
 
+            $path_file =  rtrim($this->path,DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . $model->file;
             if(!count($model->getErrors()) && $file->error == 0 && $file->saveAs($path_file))
             {
 
@@ -190,6 +214,7 @@ class UploadAction extends Action {
                     $image_preview = '';
                     $image_thumbnail = '';
 
+                    /*** Image if */
                     list($width, $height) = @getimagesize($path_file);
                     if($width > 0 || $height > 0)
                     {
@@ -197,16 +222,17 @@ class UploadAction extends Action {
                         list($width, $height) = @getimagesize($path_file);
 
                         $info_preview = pathinfo($model->file);
-                        $image_preview = $info_preview['dirname'] . '/' . 'preview_'.$info_preview['basename'];
+                        $image_preview = $info_preview['dirname'] . '/' . $this->preview_prefix . $info_preview['basename'];
                         $path_preview_file = rtrim($this->path,DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . $image_preview;
                         $this->resizeImagePreview($path_file , $path_preview_file , $this->image_preview_width ,$this->image_preview_height);
 
-                        $image_thumbnail =  $info_preview['dirname'] . '/' . 'thumbnail_'.$info_preview['basename'];
+                        $image_thumbnail =  $info_preview['dirname'] . '/' . $this->thumbnail_prefix .$info_preview['basename'];
                         $path_thumbnail_file = rtrim($this->path,DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . $image_thumbnail;
                         $this->resizeImageThumbnail($path_file , $path_thumbnail_file);
                     }
+                    /*** Image end */
 
-                    $result = [
+                    $this->_result = [
                         "name" => $model->file,
                         "name_display" => $file->name,
                         "type" => $model->mime_type,
@@ -223,17 +249,28 @@ class UploadAction extends Action {
 
                     if((!empty($image_preview)))
                     {
-                        $result["crop_url"]    = Url::to([$this->id,
-                            "_method" => "crop",
-                            "file"    => $model->file
-                        ]);
+                        $this->_result["crop_url"]    = Url::to([$this->id,  "_method" => "crop",   "file"    => $model->file ]);
                     }
                 }
             }
         }
 
-        $result['errors'] = $model->getErrors();
-        return Json::encode($result);
+        $this->_result['errors'] = $model->getErrors();
+
+        return  Json::encode($this->_result);
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getResult()
+    {
+        return $this->_result;
+    }
+
+    public function getErrors()
+    {
+        return $this->_result['errors'];
     }
 
     protected function beforeReturn()
@@ -241,6 +278,7 @@ class UploadAction extends Action {
         $path = $this->path;
         return true;
     }
+
 
     protected  function resizeImageThumbnail($path , $path_thumbnail_file)
     {
@@ -292,5 +330,7 @@ class UploadAction extends Action {
     {
         $this->resizeImagePreview($path,$path,$this->image_width_max, $this->image_height_max );
     }
+
+
 
 }
