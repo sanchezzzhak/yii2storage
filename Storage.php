@@ -36,6 +36,9 @@ use yii\log\Logger;
 
 class Storage
 {
+
+    const GENERATE_SYSTEM = 0;
+    const GENERATE_SHA1 = 1;
     const COPY_MODE = 0;
     const MOVE_MODE = 1;
 
@@ -44,9 +47,10 @@ class Storage
     private $_baseUrl;
     private $_storagePath;
     private $_storages = null;
-    protected $_level;
+    private $_level;
     private $_source = null;
     private $_dest = null;
+
 
     /**
      * @var  string  delimiter for width prefix
@@ -168,8 +172,6 @@ class Storage
         return (in_array($id, $storages)) ?  $id : false;
     }
 
-    const GENERATE_SYSTEM = 0;
-    const GENERATE_SHA1 = 1;
 
     /**
      * @param $ext
@@ -180,17 +182,11 @@ class Storage
      */
     public function generateFileName($generate_type = self::GENERATE_SYSTEM)
     {
-        switch($generate_type){
-            case self::GENERATE_SHA1:
-                $file =  sha1(Yii::$app->user->id.microtime());
-                break;
-            case self::GENERATE_SYSTEM:
-            default:
-                $file = Yii::$app->security->generateRandomKey();
-        }
-        return $file;
+       if($generate_type ==  self::GENERATE_SHA1 )
+            return sha1(Yii::$app->user->id.microtime());
+       //GENERATE_SYSTEM
+       return Yii::$app->security->generateRandomKey();
     }
-
 
     /**
      * get unique file path
@@ -341,6 +337,23 @@ class Storage
     }
 
     /**
+     * @param $path
+     * @param $to_path
+     * @param int $delete_after_save
+     */
+    public function move($path, $to_path, $delete_after_save = self::MOVE_MODE)
+    {
+        if (($file = realpath($path)) === false || !is_file($file))
+            return null;
+
+        @copy($path, $to_path);
+        @chmod($to_path, 0666);
+        if ($delete_after_save === self::MOVE_MODE)
+            @unlink($file);
+    }
+
+
+    /**
      * Transaction
      * @return bool
      */
@@ -420,82 +433,4 @@ class Storage
 
         return ($path1 && $path1 == $path2);
     }
-
-
-    /**
-     * Add prefix to file path
-     * ```php
-     * photo_path('photo/a2/d4/34/a56e4890.jpg',180,100)
-     * return 'photo/a2/d4/34/180x100_a56e4890.jpg'
-     * ```
-     * @param $path
-     * @param string $width
-     * @param string $height
-     * @return string
-     */
-    public static function photo_path($path, $width=0, $height = 0 )
-    {
-        if(empty($path)) return '';
-        $path = pathinfo($path);
-        $size = (!$width && !$height) ? '' : $width ."x".$height;
-        $path_part = preg_replace('#[0-9]{1,3}x[0-9]{1,3}_#ixs', '', $path['basename']);
-        return $path['dirname'].'/'.$size."_".$path_part;
-
-    }
-
-
-    /**
-     * Возвращает url на фотку из storage, если фотку шириной $width не существует, создает ее.
-     * Storage::instance('photo')->img($path, $width, true);
-     * $path = '17/c9/e0/96/38/17c9e09638917af7d932cf9130603397.jpg'; файл, сохраненный в бд
-     * $width = 118 или array(118, 178) - ширина фотки
-     * $cap = true/false - если файла нет использовать или нет заглушку
-     *
-     * @param      $path
-     * @param null $width
-     * @param bool $cap
-     *
-     * @return bool|string
-     *
-    public function img($rel_path, $width = null, $cap = false)
-    {
-        $path = $this->normalize($rel_path);
-        if (is_file($path))
-        {
-        if ($width == null) return $rel_path;
-
-        if (is_numeric($width) && $width > 0)
-        {
-        $pathinfo = pathinfo($path);
-        $file = $pathinfo['dirname'].DIRECTORY_SEPARATOR.$width.$this->_delimiter.$pathinfo['basename'];
-        if (!is_file($file))
-        {
-        try
-        {
-        $imagine = new \Imagine\Gd\Imagine();
-        $img = $imagine->open($path);
-        $size = $img->getSize();
-        $img->resize(new \Imagine\Image\Box($width, $width * $size->getHeight() / $size->getWidth()))
-        ->save($file, array('quality' => 80));
-        @chmod($file, 0777);
-        }
-        catch (Exception $e)
-        {
-        return false;
-        }
-    }
-
-    $path = $this->rel_path($file);
-
-    $a = $this->_baseUrl.DIRECTORY_SEPARATOR.$path;
-
-    return $this->_baseUrl.DIRECTORY_SEPARATOR.$path;
-    }
-
-    return false;
-    }
-    }*/
-
-
-
 }

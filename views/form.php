@@ -6,8 +6,8 @@ $function_download_tmpl = function($model = null , $isJS = true , $options = [])
 
     $js = ($isJS? '{% for (var i=0, file; file = o.files[i]; i++) { %}' : '');
     $js.= '<div class="template-upload">';
-    $js.= ($isJS? '{% if( o.result.errors.length > 0){ %}':'');
-
+    $js.= ($isJS? '{% if( o.result.errors){ %}':'');
+    $js.= '<div>Error upload</div>';
     $js.= ($isJS? '{% } else { %}': '');
     $js.= '<p>File :{%=file.name%} <span class="size">{%=o.formatFileSize(file.size)%}</span>  uploaded success</p>
             <div class="act">
@@ -15,17 +15,18 @@ $function_download_tmpl = function($model = null , $isJS = true , $options = [])
             </div>';
 
     $js.= Html::hiddenInput('meta[]', $model->meta, ['class'=>'meta']) . "\n";
-    $js.= ($isJS ? '{% if(o.result.image_preview_url.length > 0 ) { %}':'');
+    $js.= ($isJS ? '{% if(o.result.images.thumbnail) { %}':'');
 
     $js.= '<span>
-                <a class="preview" href="javascript:;"><img src="{%=o.result.thumbnail_url%}"></a>
+                <a class="preview" href="javascript:;"><img src="{%=o.result.images.thumbnail.url%}"></a>
                 <div class="preview-box hide">
                     <div class="act">';
+
     $js.= (isset($options['crop']) && $options['crop']) ? '<a href="javascript:;" class="crop btn inline" data-url="{%=o.result.crop_url%}">Crop</a>'."\n": '';
     $js.= '<a href="javascript:;" class="crop-cancel btn inline">Cancel</a>'."\n";
 
     $js.= '         </div>
-                    <img src="{%=o.result.image_preview_url%}">
+                    <img src="{%=o.result.images.preview.url%}">
                 </div>
             </span>';
 
