@@ -22,14 +22,12 @@ class BaseUploadAction extends Action
 
     public static $EXTENSION_IMAGE = ['gif','png','jpg','jpeg'];
 
-    public $storage = null;
+    public $storage = 'tmp';
     public $extension_allowed = [];
-
-    public $path;
-    public $public_path;
 
     public $image_width_max = 1024;
     public $image_height_max = 768;
+
     public $resize_image = [
         'preview'   => [600,400, UploadAction::IMAGE_RESIZE],
         'thumbnail' => [120,120, UploadAction::IMAGE_THUMB]
@@ -47,9 +45,7 @@ class BaseUploadAction extends Action
         {
             try
             {
-                $storage           = new Storage($this->storage);
-                $this->path        = $storage->getBasePath();
-                $this->public_path = $storage->getBaseUrl();
+                $storage  = new Storage($this->storage);
             }
             catch (ErrorException $error )
             {
@@ -65,7 +61,9 @@ class BaseUploadAction extends Action
      */
     public function _image($model_file)
     {
-        $path_file =  rtrim($this->path,DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . $model_file;
+        $storage = new Storage($this->storage);
+        $adapter = $storage->getAdapter();
+        $path_file = $adapter->getAbsolutePath($model_file);
 
         /*** Image if */
         list($width, $height) = @getimagesize($path_file);
@@ -78,9 +76,9 @@ class BaseUploadAction extends Action
                 list($image_width, $image_height) = $param;
                 $type = isset($param[2]) ? $param[2] : UploadAction::IMAGE_RESIZE;
 
-                $info_path       = pathinfo($model_file);
+                $info_path       = pathinfo($path_file);
                 $image_save      = $info_path['dirname'] . '/' . $prefix . '_' . $info_path['basename'];
-                $image_path_save = rtrim($this->path,DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . $image_save;
+                $image_path_save = $image_save;
 
                 switch($type)
                 {
@@ -91,8 +89,8 @@ class BaseUploadAction extends Action
                         $this->resizeImageThumbnail($path_file , $image_path_save , $image_width, $image_height );
                         break;
                 }
-                $this->_result['images'][$prefix]['path'] = $image_save;
-                $this->_result['images'][$prefix]['url']  = $this->public_path . $image_save ;
+                //$this->_result['images'][$prefix]['path'] = $image_save;
+                $this->_result['images'][$prefix]['url']  = $adapter->getUrl($image_save) ;
             }
         }
         /*** Image end */

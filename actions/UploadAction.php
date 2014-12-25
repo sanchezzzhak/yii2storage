@@ -127,9 +127,11 @@ class UploadAction extends BaseUploadAction
         {
             $ext = strtolower(pathinfo($model->file, PATHINFO_EXTENSION));
             $storage = new Storage($this->storage);
-            $model->file =  $storage->rel_path($storage->unique_filepath($ext));
+            $adapter = $storage->getAdapter();
 
-            $path_file =  rtrim($this->path,DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . $model->file;
+            $path_file = $adapter->uniqueFilePath($ext);
+            $model->file = $adapter->getUrl($path_file);
+
             if(!count($model->getErrors()) && $file->error == 0 && $file->saveAs($path_file))
             {
                 chmod($path_file , 0666);
@@ -141,7 +143,7 @@ class UploadAction extends BaseUploadAction
                         "name_display" => $file->name,
                         "type"         => $model->mime_type,
                         "size"         => $model->size,
-                        "url"          => $this->public_path . $model->file,
+                        "url"          => $model->file,
                         "images"       => [],
                     ];
 
@@ -157,13 +159,8 @@ class UploadAction extends BaseUploadAction
         return  Json::encode($this->_result);
     }
 
-
-
-
-
     protected function beforeReturn()
     {
-        $path = $this->path;
         return true;
     }
 }

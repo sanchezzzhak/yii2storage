@@ -9,8 +9,12 @@
 
 namespace kak\storage;
 
+use Aws\S3\Enum\CannedAcl;
+use Aws\S3\S3Client;
 use Yii;
+use yii\base\Component;
 use yii\base\Exception;
+use yii\helpers\ArrayHelper;
 use yii\log\Logger;
 
 
@@ -18,8 +22,7 @@ use yii\log\Logger;
  * Config for Storage
 
 'storage' => [
-    'base_path'  => __DIR__. '/../web/storage/',
-    'base_url'   => '/storage/',
+
     'storages' => [
         'photo'  => [
             'level' => 3,
@@ -32,405 +35,85 @@ use yii\log\Logger;
         ],
     ],
 ],
+
  */
 
-class Storage
+/***
+ * Class Storage
+ * @package kak\storage
+ */
+class Storage extends Component
 {
+    const TYPE_STORAGE_AMAZON = 'amazon';
+    const TYPE_STORAGE_FILE   = 'file';
 
-    const GENERATE_SYSTEM = 0;
-    const GENERATE_SHA1 = 1;
-    const COPY_MODE = 0;
-    const MOVE_MODE = 1;
+    private $_apapter;
 
-    private $_id;
-    private $_basePath;
-    private $_baseUrl;
-    private $_storagePath;
-    private $_storages = null;
-    private $_level;
-    private $_source = null;
-    private $_dest = null;
+    public  $id;
+    public  $storages;
 
-
-    /**
-     * @var  string  delimiter for width prefix
-     */
-    private $_delimiter = '_';
-
-    /**
-     * @param string $id storage name
-     * @throws Exception
-     */
-    public function __construct($id)
+    public function __construct($id, $config = [])
     {
-        $log = Yii::$app->getLog()->getLogger();
+
+        if(!count($config) && !$config = ArrayHelper::getValue(Yii::$app->params,'storage'))
+        {
+            throw new Exception(Yii::t('yii', 'Storages not init config'));
+        }
+
+        parent::__construct($config);
 
         if (!is_string($id))
         {
-            $message = Yii::t('yii', 'storage ID must be string.');
-            $log->log($message, Logger::LEVEL_ERROR, 'storage');
-            throw new Exception($message);
+            throw new Exception(Yii::t('yii', 'Storage ID must be string.'));
         }
 
-        $config = Yii::$app->params['storage'];
-
-        $this->_storages = array_keys($config['storages']);
-
-        if (!$this->is_exist($id))
+        if (!isset($this->storages[$id]))
         {
-            $message = Yii::t('yii', 'Storage ID={id} not exist.', array('id' => $id));
-            $log->log($message, Logger::LEVEL_ERROR, 'storage');
+            $message = Yii::t('yii', 'Storage ID={id} not exist.', ['id' => $id]);
             throw new Exception($message);
         }
 
-        $this->_id = $id;
-        $this->_level = $config['storages'][$id]['level'];
-
-        if (($this->_basePath = realpath($config['base_path'])) === false || !is_dir($this->_basePath))
-        {
-            $message = Yii::t('yii', 'Base path "{path}" is not a valid directory.', ['path' => $config['base_path']]);
-            $log->log($message, Logger::LEVEL_ERROR, 'storage');
-            throw new Exception($message);
-        }
-
-        if (!is_writable($this->_basePath))
-        {
-            $message = Yii::t('yii', 'Not writable directory: {base_path}', [
-                'base_path' => $this->_basePath
-            ]);
-
-            $log->log($message, Logger::LEVEL_ERROR, 'storage');
-            throw new Exception($message);
-        }
-
-        $this->_storagePath = $this->_basePath . DIRECTORY_SEPARATOR . $this->_id;
-
-        if (!file_exists($this->_storagePath)) mkdir($this->_storagePath);
-
-        $this->_baseUrl =  $config['base_url'];
+        $this->id = $id;
     }
 
     /**
-     * Check exist storage
      * @param $id
-     * @return bool
+     * @return mixed
      */
-    public function is_exist($id)
+    private function getStorageConfigById($id)
     {
-        return in_array($id, $this->_storages);
+        return ArrayHelper::getValue($this->storages, $id);
     }
 
     /**
-     * Get current storage
-     * @return string
-     */
-    public function getId()
-    {
-        return $this->_id;
-    }
-
-    /**
-     *
-     * @return mixed base path to storage directory
-     */
-    public function getBasePath()
-    {
-        return $this->_basePath;
-    }
-
-    /**
-     * @return string base url to storage directory
-     */
-    public function getBaseUrl()
-    {
-        return $this->_baseUrl;
-    }
-
-    /**
-     * @return string
-     */
-    public function getStoragePath()
-    {
-        return $this->_storagePath;
-    }
-
-
-    /**
-     * @param $path
-     * @return bool|mixed
-     */
-    public static function has_id($path)
-    {
-        $config = Yii::$app->params['storage'];
-        $storages = array_keys($config['storages']);
-        $basePath = realpath($config['basePath']);
-
-        $storagePath = str_replace($basePath.DIRECTORY_SEPARATOR, '', $path);
-        $arr = explode(DIRECTORY_SEPARATOR, $storagePath);
-        $id = array_shift($arr);
-
-        return (in_array($id, $storages)) ?  $id : false;
-    }
-
-
-    /**
-     * @param $ext
-     * @param $generate_type
-     * @return string
-     * @throws Exception
+     * @return \kak\storage\adapters\AmazonAdapter|\kak\storage\adapters\FileAdapter
      * @throws \yii\base\InvalidConfigException
      */
-    public function generateFileName($generate_type = self::GENERATE_SYSTEM)
+    public function getAdapter()
     {
-       if($generate_type ==  self::GENERATE_SHA1 )
-            return sha1(Yii::$app->user->id.microtime());
-       //GENERATE_SYSTEM
-       return Yii::$app->security->generateRandomKey();
-    }
-
-    /**
-     * get unique file path
-     *
-     * @param $ext
-     * @return null|string
-     * @throws \yii\base\Exception
-     */
-    public function unique_filepath($ext)
-    {
-        $logger = Yii::$app->getLog()->getLogger();
-
-        if (!$ext) return null;
-
-        $filename = $this->generateFileName(self::GENERATE_SHA1) . '.' . $ext;
-
-        $filedir = $this->_storagePath;
-
-        for ($i = 0; $i < $this->_level; $i++)
+        if($this->_apapter == null)
         {
-            if (!file_exists($filedir))
+            $config = $this->getStorageConfigById($this->id);
+            $config['id'] = $this->id;
+            $type = ArrayHelper::remove($config,'type',Storage::TYPE_STORAGE_FILE);
+
+            switch($type)
             {
-                $message = Yii::t('yii', 'Directory not exists: :filedir', array(':filedir' => $filedir));
-                $logger->log($message, Logger::LEVEL_ERROR, 'storage');
-                throw new Exception($message);
-            }
-
-            if (!is_dir($filedir))
-            {
-                $message = Yii::t('yii', 'Not directory: :filedir', array(':filedir' => $filedir));
-                $logger->log($message, Logger::LEVEL_ERROR, 'storage');
-                throw new Exception($message);
-            }
-
-            if (!is_writable($filedir))
-            {
-                $message = Yii::t('yii', 'Not writable directory: :filedir', array(':filedir' => $filedir));
-                $logger->log($message, Logger::LEVEL_ERROR, 'storage');
-                throw new Exception($message);
-            }
-
-            $filedir .= DIRECTORY_SEPARATOR.substr($filename, $i * 2, 2);
-
-            @mkdir($filedir);
-        }
-
-        $filepath = $filedir.DIRECTORY_SEPARATOR.$filename;
-
-        if (file_exists($filepath))
-        {
-            $filepath = $this->unique_filepath($ext);
-        }
-
-        return $filepath;
-    }
-
-
-    /**
-     * Normalize path:
-     * ```php
-     *
-     * normalize('photo/0f/3d/3c/02/d2/0f3d3c02d2859a9f0a3d45916c06c256.jpg')
-     * return '/srv/www/vhosts/devel/gstnet.site.domen/storage/photo/0f/3d/3c/02/d2/0f3d3c02d2859a9f0a3d45916c06c256.jpg'
-     * ```
-     * @param $path
-     * @return bool|string
-     */
-    public function normalize($path)
-    {
-        if (!$path || !is_string($path)) return null;
-        //
-
-        $file = $this->_basePath.DIRECTORY_SEPARATOR.$this->rel_path($path);
-        if ($file === $this->_basePath.DIRECTORY_SEPARATOR.$path)
-        {
-            return $file;
-        }
-
-        return null;
-    }
-
-    /**
-     * ```php
-     * rel_path('/srv/www/vhosts/devel/site.domen/storage/photo/0f/3d/3c/02/d2/0f3d3c02d2859a9f0a3d45916c06c256.jpg')
-     * return storage/photo/0f/3d/3c/02/d2/0f3d3c02d2859a9f0a3d45916c06c256.jpg
-     * ```
-     *
-     * @param $path
-     * @return string
-     */
-    public function rel_path($path)
-    {
-        if (trim($path) == '') return '';
-
-        $prefix = null;
-        $filename = basename($path);
-        if (strpos($filename, $this->_delimiter))
-        {
-            $filename = explode($this->_delimiter, $filename);
-            $prefix = $filename[0];
-            $filename = $filename[1];
-        }
-        $filedir = $this->_id;
-
-        for ($i = 0; $i < $this->_level; $i++)
-        {
-            $filedir .= DIRECTORY_SEPARATOR.substr($filename, $i * 2, 2);
-        }
-
-        if ($prefix) $filename = $prefix.$this->_delimiter.$filename;
-
-        return $filedir.DIRECTORY_SEPARATOR.$filename;
-    }
-
-
-    /**
-     *  Save file to path
-     *
-     * @param $path
-     * @param $delete_after_save
-     * @return null|string
-     */
-    public function save($path, $delete_after_save = self::MOVE_MODE)
-    {
-        $this->_source = $this->_dest = null;
-
-//		if (($file = $this->normalize($path)) === false)
-//			return false;
-
-        if (($file = realpath($path)) === false || !is_file($file))
-            return null;
-
-        $ext = pathinfo($file, PATHINFO_EXTENSION);
-
-        $storage_filepath = $this->unique_filepath($ext);
-        if (!$storage_filepath)
-            return null;
-
-        $this->_source = $file;
-        $this->_dest = $storage_filepath;
-        @copy($file, $storage_filepath);
-        @chmod($storage_filepath, 0666);
-
-        if ($delete_after_save === self::MOVE_MODE)
-            @unlink($file);
-
-        return $storage_filepath;
-    }
-
-    /**
-     * @param $path
-     * @param $to_path
-     * @param int $delete_after_save
-     */
-    public function move($path, $to_path, $delete_after_save = self::MOVE_MODE)
-    {
-        if (($file = realpath($path)) === false || !is_file($file))
-            return null;
-
-        @copy($path, $to_path);
-        @chmod($to_path, 0666);
-        if ($delete_after_save === self::MOVE_MODE)
-            @unlink($file);
-    }
-
-
-    /**
-     * Transaction
-     * @return bool
-     */
-    public function rollback()
-    {
-        if ($this->_source && $this->_dest)
-        {
-            @copy($this->_dest, $this->_source);
-            @unlink($this->_dest);
-
-            return true;
-        }
-
-        return false;
-    }
-
-
-    /**
-     * Remove all files in the folder
-     * @param $path
-     * 	full path /www/host/storage/photo/a2/d4/34/a56e4890.jpg
-     *	OR absolute basePath photo/a2/d4/34/a56e4890.jpg
-     *
-     * @return bool|int
-     * ~ bool not find path
-     * ~ int count delete file;
-     */
-    public function delete($path)
-    {
-        if (!$this->in_storage($path))
-        {
-            $path = $this->normalize($path);
-        }
-
-        if (!$path)
-            return false;
-
-        $pathinfo = pathinfo($path);
-        $pattern = $pathinfo['dirname'].DIRECTORY_SEPARATOR.'*'.$this->_delimiter.$pathinfo['basename'];
-        $i = 0;
-
-        foreach (glob($pattern) as $p)
-        {
-            if (is_file($p))
-            {
-                $i++;
-                unlink($p);
+                case Storage::TYPE_STORAGE_AMAZON:
+                    $this->_apapter = new \kak\storage\adapters\AmazonAdapter($config);
+                    break;
+                case Storage::TYPE_STORAGE_FILE:
+                    $this->_apapter = new \kak\storage\adapters\FileAdapter($config);
+                    break;
             }
         }
-        if (is_file($path))
-        {
-            $i++;
-            unlink($path);
-        }
-
-        return $i;
+        return $this->_apapter;
     }
 
-    /**
-     * Checks path whether the storage
-     * --- The actual existence of a file on the file system is not checked
-     * @param $path
-     *
-     * @return bool
-     */
-    public function in_storage($path)
+    public function save($source, $options)
     {
-        if (!is_string($path))
-            return false;
-
-        $path1 = $this->_basePath.DIRECTORY_SEPARATOR.$this->rel_path($path);
-        $p = pathinfo($path);
-        if (!strlen($p['filename']) || !strlen($p['basename']))
-            return false;
-
-        $path2 = $p['dirname'].DIRECTORY_SEPARATOR.$p['basename'];
-
-        return ($path1 && $path1 == $path2);
+        return $this->getAdapter()->save($source,$options);
     }
+
+
 }
