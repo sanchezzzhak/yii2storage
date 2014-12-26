@@ -11,34 +11,10 @@ namespace kak\storage\actions;
 use kak\storage\models\UploadForm;
 
 use Yii;
-use yii\base\Action;
-use yii\base\ErrorException;
 use yii\helpers\Json;
 use yii\web\UploadedFile;
 use yii\web\HttpException;
-use yii\helpers\Url;
-
 use kak\storage\Storage;
-
-/**
- * example use controller this uploading
-```php
-
-// Custom
-    $form_model = new kak\storage\models\UploadForm;
-    $action_method = new \kak\storage\actions\UploadAction($this->id, $this, [
-        'form_model' => $form_model,
-        'header'   => false,
-        'storage'  => 'photo',
-        'extension_allowed' => \kak\storage\actions\UploadAction::$EXTENSION_IMAGE
-    ]);
-    if($result_upload = $action_method->run())
-    {
-
-    }
-
-```
- */
 
 /**
  * Class UploadAction
@@ -49,14 +25,7 @@ class UploadAction extends BaseUploadAction
 
     public $form_name;
     public $form_model;
-
-
-
     public $header  = false;
-
-
-
-
 
     public $random_name = false;
 

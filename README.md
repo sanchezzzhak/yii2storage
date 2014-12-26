@@ -35,7 +35,32 @@ to the require section of your `composer.json` file.
 
 Usage
 -----
+PLS set config params Yii::$app->params
 
+
+```php
+/** @docs https://console.aws.amazon.com/iam/home Generation access key and secret */
+$amazon_config = [
+    'key' => '', 
+    'secret' => '',
+    'bucket' => 'my',
+    'level'  => 2,
+    'type'   => 'amazon',
+    'region' => 'us-east-1',
+]
+//...
+'storage' => [
+    'storages' => [
+         // use amazon config
+        'photo'  => $amazon_config,
+        'custom_name' => [],
+        // local server save files
+        'tmp'  => [       
+            'level' => 0,
+        ],
+    ],
+],
+```
 Once the extension is installed, simply use it in your code by:
 
 ```php
@@ -45,43 +70,91 @@ Once the extension is installed, simply use it in your code by:
 ]); ?>
 ```
 
-Example use controller this uploading
-```php
-    public function actions()
-    {
-        return [
-            'upload' => [
-                'class' => 'kak\storage\actions\UploadAction',
-                'form_name' => 'kak\storage\models\UploadForm',
-                'path'  => Yii::$app->getBasePath() . '/web/uploads/',
-                'public_path' => '/uploads/',
-                'random_name' => false,
-            ],
-        ];
-    }
-```
-
+Example use controller this uploading 
 Custom run action uploading
 ```php
     $action = new \kak\storage\actions\UploadAction($this->id, $this, [
         'form_name' => 'kak\storage\models\UploadForm',
-        'path'  => Yii::$app->getBasePath() . '/web/uploads/',
-        'public_path' => '/uploads/'
+        'storage'  => 'tmp'
+        'resize_image' => [
+            'preview'   => [600,400, UploadAction::IMAGE_RESIZE],
+            'thumbnail' => [120,120, UploadAction::IMAGE_THUMB],
+            'custom_size' => [320,280],  // add custom new size 320x280
+        ]        
     ]);
     return $action->run();
 ```
 
-Server configuration
-deny ngnix
-location ~* ^/(storage|uploads)/.+\.(php|php3|php4|php5|phtml|phps|pl|pm)$ {
-    deny all;
+Use my project this controller
+```php
+
+$storage_tmp = new Storage('tmp');      // local tmp dir
+$storage_photo = new Storage('photo');  // amazon
+
+// ajax upload result
+$result = [];
+$arr_meta =  Yii::$app->request->post('meta',[]);
+// native upload old history mobile
+if(!Yii::$app->request->isAjax)
+{
+   $action = new \kak\storage\actions\UploadAction($this->id, $this, [
+        'form_name' => 'kak\storage\models\UploadForm',
+        'storage'  => 'tmp',
+        'extension_allowed' => \kak\storage\actions\UploadAction::$EXTENSION_IMAGE
+    ]);
+   $data = $action->run();
+    
+    if(!empty($data['name']))
+    {
+        $arr_meta[] = Json::encode($data);
+    }
 }
-
-location / {
-    try_files $uri index.php;
+// download server file
+if($url = Yii::$app->request->post('url'))
+{
+    $action = new \kak\storage\actions\HttpUploadAction($this->id, $this, [
+        'storage'  => 'tmp',
+        'url' => $url,
+        'extension_allowed' => \kak\storage\actions\HttpUploadAction::$EXTENSION_IMAGE
+    ]);
+    $arr_meta[] = $action->run();
 }
+ $adapter_tmp = $storage_tmp->getAdapter();
 
+    // SAVE STORAGE Photo
+foreach($arr_meta as $meta)
+{
+    $data = Json::decode($meta);
+    $file_source = $adapter_tmp->getAbsolutePath($data['name']);
 
-deny apache, create file htaccess
-php_flag engine 0
-AddType "text/html" .php .cgi .pl .fcgi .fpl .phtml .shtml .php2 .php3 .php4 .php5 .asp .jsp
+    $photo_path =  $storage_photo->save($file_source,[]);
+
+    $images = [
+        'original' => $storage_photo->getAdapter()->getUrl($photo_path)
+    ];
+
+    foreach($data['images'] as $prefix => $image)
+    {
+        $normalize_source = $adapter_tmp->getAbsolutePath($image['url']);
+        $info_normalize_source  = pathinfo($normalize_source);
+        $image_name = pathinfo($image['url'], PATHINFO_BASENAME);
+        $info_image = pathinfo($photo_path);
+
+        $images[$prefix] = $storage_photo->getAdapter()->getUrl( $storage_photo->save($info_normalize_source['dirname'] . '/'. $image_name  ,[
+            'key' =>  $info_image['dirname'] . '/'. $image_name
+        ]));
+
+    }
+
+    $photo = new Photo;
+    $photo->user_id     = Yii::$app->user->id;
+    $photo->name        = Yii::$app->request->post('name');
+    $photo->description = Yii::$app->request->post('description');
+    $photo->album_id    = (int)Yii::$app->request->post('album',0);
+    $photo->path        = JSON::encode($images);
+    $photo->adults      = (int)(Yii::$app->request->post('adults',false));
+    if( $photo->save())
+        $result[] = $photo->id;
+
+}
+```
