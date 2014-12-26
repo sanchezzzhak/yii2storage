@@ -83,9 +83,9 @@ class HttpUploadAction  extends BaseUploadAction
                 }
 
                 $storage = new Storage($this->storage);
-                $save_url = $storage->unique_filepath($ext);
+                $save_url = $storage->getAdapter()->getAbsolutePath($storage->getAdapter()->uniqueFilePath($ext));
 
-                if(!count(  $this->_result['errors']))
+                if(!count($this->_result['errors']))
                 {
                     $ch = curl_init($url);
                     $fp = fopen($save_url, 'w+');
@@ -95,17 +95,17 @@ class HttpUploadAction  extends BaseUploadAction
                     curl_close($ch);
                     fclose($fp);
 
-                    $rel_path = $storage->rel_path($save_url);
+                    $rel_path = $storage->getAdapter()->getUrl($save_url);
 
                     $this->_result = [
                         "name"         => $rel_path,
                         "name_display" => null,
                         "type"         => null,
                         "size"         => $info['download_content_length'],
-                        "url"          => $this->public_path . $rel_path,
+                        "url"          => $rel_path,
                         "images"       => [],
                     ];
-                    $this->_image($rel_path);
+                    $this->_image( $rel_path);
                     return  $this->response();
                 }
 

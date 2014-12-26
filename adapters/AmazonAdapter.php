@@ -11,6 +11,7 @@ namespace kak\storage\adapters;
 use Aws\S3\Enum\CannedAcl;
 use Aws\S3\S3Client;
 use Guzzle\Http\Exception\ClientErrorResponseException;
+use yii\base\Exception;
 use yii\helpers\ArrayHelper;
 use Yii;
 
@@ -50,21 +51,20 @@ class AmazonAdapter extends BaseAdapter
 
     /**
      * @param $source
-     * @param array $options
+     * @param array $options is set key overwrite
      * @return \Guzzle\Service\Resource\Model|void
+     * @throws Exception
      */
-
     public function save($source, $options = [])
     {
         $ext = pathinfo($source, PATHINFO_EXTENSION);
-        $name = str_replace(DIRECTORY_SEPARATOR,'/',$this->uniqueFilePath($ext));
+        $unique_path = ArrayHelper::remove($options,'key',$this->uniqueFilePath($ext));
+        $name = str_replace(DIRECTORY_SEPARATOR,'/',$unique_path);
 
         if(!file_exists($source))
         {
-            pre(false);
+           throw new Exception(Yii::t('app','file source not exists'));
         }
-
-       /// pre($name); exit;
 
         $options = ArrayHelper::merge([
             'Bucket' => $this->bucket,
@@ -72,8 +72,6 @@ class AmazonAdapter extends BaseAdapter
             'SourceFile' => $source,
             'ACL' => CannedAcl::PUBLIC_READ
         ], $options);
-
-
 
         /** @docs putObject http://docs.aws.amazon.com/aws-sdk-php/latest/class-Aws.S3.S3Client.html#_putObject */
         $model = $this->getClient()->putObject($options);
@@ -122,6 +120,7 @@ class AmazonAdapter extends BaseAdapter
      */
     public function getUrl($name, $expires = NULL)
     {
+
         return $this->getClient()->getObjectUrl($this->bucket, $name, $expires);
     }
 
