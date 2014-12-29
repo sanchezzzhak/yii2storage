@@ -80,6 +80,26 @@ class AmazonAdapter extends BaseAdapter
         return $name;
     }
 
+	/**
+	 * @param $sourceKey
+	 * @param $targetKey
+	 * @param array $options
+	 * @return \Guzzle\Service\Resource\Model|void
+	 * @throws Exception
+	 */
+	public function copy($sourceKey, $targetKey, $options = [])
+	{
+		$options = ArrayHelper::merge([
+			'Bucket'     => $this->bucket,
+			'Key'        => $targetKey,
+			'CopySource' => "{$this->bucket}/{$sourceKey}",
+			'ACL' => CannedAcl::PUBLIC_READ
+		], $options);
+		$model = $this->getClient()->copyObject($options);
+		return $targetKey;
+	}
+
+
     /**
      * Removes a file
      * @param string $name the name of the file to remove

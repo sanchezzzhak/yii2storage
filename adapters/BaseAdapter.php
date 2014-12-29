@@ -60,7 +60,10 @@ class BaseAdapter extends Component
      * @param $sourceKey
      * @param $targetKey
      */
-    public function copy($sourceKey, $targetKey){}
+    public function copy($sourceKey, $targetKey, $options = [])
+	{
+
+	}
 
     public function delete($name)
     {
