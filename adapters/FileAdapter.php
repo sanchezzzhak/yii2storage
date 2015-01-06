@@ -77,9 +77,9 @@ class FileAdapter extends BaseAdapter
      * @return string|void
      * @throws Exception
      */
-    public function uniqueFilePath($ext)
+    public function uniqueFilePath($ext = null)
     {
-        $filename = $this->generateName(FileAdapter::GENERATE_SHA1) . '.' . $ext;
+        $filename = $this->generateName(FileAdapter::GENERATE_SHA1) . (!empty($ext) ? '.' . $ext: '');
 
         $filedir = $this->getBasePath() . DIRECTORY_SEPARATOR . $this->id;
 

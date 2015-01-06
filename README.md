@@ -79,7 +79,7 @@ Custom run action uploading
         'resize_image' => [
             'preview'   => [600,400, UploadAction::IMAGE_RESIZE],
             'thumbnail' => [120,120, UploadAction::IMAGE_THUMB],
-            'custom_size' => [320,280],  // add custom new size 320x280
+            '320' => [320,280],  // add custom new size 320x280
         ]        
     ]);
     return $action->run();

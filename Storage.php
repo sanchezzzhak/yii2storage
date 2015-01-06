@@ -48,9 +48,12 @@ class Storage extends Component
     const TYPE_STORAGE_FILE   = 'file';
 
     private $_apapter;
+    private $_type;
+
 
     public  $id;
     public  $storages;
+
 
     public function __construct($id, $config = [])
     {
@@ -59,8 +62,8 @@ class Storage extends Component
         {
             throw new Exception(Yii::t('yii', 'Storages not init config'));
         }
-
         parent::__construct($config);
+        $this->_type = ArrayHelper::remove($this->storages[$id],'type',Storage::TYPE_STORAGE_FILE);
 
         if (!is_string($id))
         {
@@ -95,9 +98,9 @@ class Storage extends Component
         {
             $config = $this->getStorageConfigById($this->id);
             $config['id'] = $this->id;
-            $type = ArrayHelper::remove($config,'type',Storage::TYPE_STORAGE_FILE);
 
-            switch($type)
+
+            switch($this->_type)
             {
                 case Storage::TYPE_STORAGE_AMAZON:
                     $this->_apapter = new \kak\storage\adapters\AmazonAdapter($config);
@@ -115,5 +118,11 @@ class Storage extends Component
         return $this->getAdapter()->save($source,$options);
     }
 
-
+    /**
+     * @return mixed
+     */
+    public function getType()
+    {
+        return $this->_type;
+    }
 }
