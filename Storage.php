@@ -46,6 +46,7 @@ class Storage extends Component
 {
     const TYPE_STORAGE_AMAZON = 'amazon';
     const TYPE_STORAGE_FILE   = 'file';
+    const TYPE_STORAGE_SCP    = 'scp';
 
     private $_apapter;
     private $_type;
@@ -89,7 +90,7 @@ class Storage extends Component
     }
 
     /**
-     * @return \kak\storage\adapters\AmazonAdapter|\kak\storage\adapters\FileAdapter
+     * @return \kak\storage\adapters\AmazonAdapter|\kak\storage\adapters\FileAdapter|\kak\storage\adapters\ScpAdapter
      * @throws \yii\base\InvalidConfigException
      */
     public function getAdapter()
@@ -99,7 +100,6 @@ class Storage extends Component
             $config = $this->getStorageConfigById($this->id);
             $config['id'] = $this->id;
 
-
             switch($this->_type)
             {
                 case Storage::TYPE_STORAGE_AMAZON:
@@ -108,6 +108,10 @@ class Storage extends Component
                 case Storage::TYPE_STORAGE_FILE:
                     $this->_apapter = new \kak\storage\adapters\FileAdapter($config);
                     break;
+				case Storage::TYPE_STORAGE_SCP:
+					$this->_apapter = new \kak\storage\adapters\ScpAdapter($config);
+					break;
+
             }
         }
         return $this->_apapter;

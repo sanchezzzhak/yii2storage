@@ -38,9 +38,9 @@ class AmazonAdapter extends BaseAdapter
 
         for ($i = 0; $i < $this->level; $i++)
         {
-            $filedir .= DIRECTORY_SEPARATOR . substr($filename, $i * 2, 2);
+            $filedir .= "/" . substr($filename, $i * 2, 2);
         }
-        $filepath = $filedir . DIRECTORY_SEPARATOR . $filename;
+        $filepath = $filedir . "/" . $filename;
 
         if ($this->fileExists($filepath))
         {
@@ -59,7 +59,7 @@ class AmazonAdapter extends BaseAdapter
     {
         $ext = pathinfo($source, PATHINFO_EXTENSION);
         $unique_path = ArrayHelper::remove($options,'key',$this->uniqueFilePath($ext));
-        $name = str_replace(DIRECTORY_SEPARATOR,'/',$unique_path);
+        $name = str_replace("/",'/',$unique_path);
 
         if(!file_exists($source))
         {
