@@ -111,6 +111,20 @@ class BaseUploadAction extends Action
 
 
     /**
+     * @param $url
+     * @return string|null
+     */
+    public function getExtension($url)
+    {
+        if(preg_match('#\.([\w\d]+)(?:\?|$)#is',$url,$matches))
+        {
+            return $matches[1];
+        }
+        return null;
+    }
+
+
+    /**
      * @param $path
      * @param $path_thumbnail_file
      * @param int $resize_width
