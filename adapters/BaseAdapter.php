@@ -77,7 +77,7 @@ class BaseAdapter extends Component
         $this->trigger(BaseAdapter::EVENT_RENAME , $event);
     }
 
-    public function uniqueFilePath($ext){}
+    public function uniqueFilePath($ext = null){}
 
     /**
      * @param $type

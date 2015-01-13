@@ -37,9 +37,9 @@ class FileAdapter extends BaseAdapter
      */
     public function getAbsolutePath($name)
     {
-        $name = str_replace($this->getBasePath() . DIRECTORY_SEPARATOR . $this->id ,'', $name);
-        $name = str_replace($this->getBaseUrl()  . DIRECTORY_SEPARATOR . $this->id ,'', $name);
-        return $this->getBasePath() . DIRECTORY_SEPARATOR . $this->id . DIRECTORY_SEPARATOR . trim($name,'/\\');
+        $name = str_replace($this->getBasePath() . "/" . $this->id ,'', $name);
+        $name = str_replace($this->getBaseUrl()  . "/" . $this->id ,'', $name);
+        return $this->getBasePath() . "/" . $this->id . "/" . trim($name,'/\\');
     }
 
 
@@ -68,8 +68,8 @@ class FileAdapter extends BaseAdapter
      */
     public function getUrl($name)
     {
-        $name = str_replace($this->getBasePath() . DIRECTORY_SEPARATOR . $this->id ,'',  $name );
-        return $this->getBaseUrl() . DIRECTORY_SEPARATOR . $this->id . DIRECTORY_SEPARATOR . trim($name,'/\\');
+        $name = str_replace($this->getBasePath() . "/" . $this->id ,'',  $name );
+        return $this->getBaseUrl() . "/" . $this->id . "/" . trim($name,'/\\');
     }
 
     /**
@@ -77,34 +77,34 @@ class FileAdapter extends BaseAdapter
      * @return string|void
      * @throws Exception
      */
-    public function uniqueFilePath($ext)
+    public function uniqueFilePath($ext = null)
     {
-        $filename = $this->generateName(FileAdapter::GENERATE_SHA1) . '.' . $ext;
+        $filename = $this->generateName(FileAdapter::GENERATE_SHA1) . (!empty($ext) ? '.' . $ext: '');
 
-        $filedir = $this->getBasePath() . DIRECTORY_SEPARATOR . $this->id;
+        $filedir = $this->getBasePath() . "/" . $this->id;
 
         for ($i = 0; $i < $this->level; $i++)
         {
             if (!file_exists($filedir))
             {
-                $message = Yii::t('yii', 'Directory not exists: :filedir', array(':filedir' => $filedir));
+                $message = Yii::t('yii', 'Directory not exists: {filedir}', array('filedir' => $filedir));
                 throw new Exception($message);
             }
             if (!is_dir($filedir))
             {
-                $message = Yii::t('yii', 'Not directory: :filedir', array(':filedir' => $filedir));
+                $message = Yii::t('yii', 'Not directory: {filedir}', array('filedir' => $filedir));
                 throw new Exception($message);
             }
             if (!is_writable($filedir))
             {
-                $message = Yii::t('yii', 'Not writable directory: :filedir', array(':filedir' => $filedir));
+                $message = Yii::t('yii', 'Not writable directory: {filedir}', array('filedir' => $filedir));
                 throw new Exception($message);
             }
-            $filedir .= DIRECTORY_SEPARATOR . substr($filename, $i * 2, 2);
+            $filedir .= "/" . substr($filename, $i * 2, 2);
             @mkdir($filedir);
         }
 
-        $filepath = $filedir . DIRECTORY_SEPARATOR . $filename;
+        $filepath = $filedir . "/" . $filename;
 
         if (file_exists($filepath))
         {
@@ -140,9 +140,9 @@ class FileAdapter extends BaseAdapter
      */
     public function delete($name)
     {
-        $name = str_replace($this->getBasePath() . DIRECTORY_SEPARATOR . $this->id,'',$name);
+        $name = str_replace($this->getBasePath() . "/" . $this->id,'',$name);
         parent::delete($name);
-        return $this->fileExists($name) ? @unlink($this->getBasePath() . DIRECTORY_SEPARATOR . $name) : false;
+        return $this->fileExists($name) ? @unlink($this->getBasePath() . "/" . $name) : false;
     }
 
     /**
@@ -151,8 +151,8 @@ class FileAdapter extends BaseAdapter
      */
     public function fileExists($name)
     {
-        $name = str_replace($this->getBasePath() . DIRECTORY_SEPARATOR . $this->id,'',$name);
-        return file_exists($this->getBasePath() . DIRECTORY_SEPARATOR . $name);
+        $name = str_replace($this->getBasePath(). "/" . $this->id ,'', $name );
+        return file_exists($this->getBasePath(). "/". ltrim($name,"/"));
     }
 
 

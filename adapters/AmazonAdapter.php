@@ -30,16 +30,17 @@ class AmazonAdapter extends BaseAdapter
      * @return string|void
      * @throws Exception
      */
-    public function uniqueFilePath($ext)
+    public function uniqueFilePath($ext = null)
     {
-        $filename = $this->generateName(AmazonAdapter::GENERATE_SHA1) . '.' . $ext;
+        $filename = $this->generateName(AmazonAdapter::GENERATE_SHA1) . (!empty($ext) ? '.' . $ext: '');
+
         $filedir  = $this->id;
 
         for ($i = 0; $i < $this->level; $i++)
         {
-            $filedir .= DIRECTORY_SEPARATOR . substr($filename, $i * 2, 2);
+            $filedir .= "/" . substr($filename, $i * 2, 2);
         }
-        $filepath = $filedir . DIRECTORY_SEPARATOR . $filename;
+        $filepath = $filedir . "/" . $filename;
 
         if ($this->fileExists($filepath))
         {
@@ -47,7 +48,6 @@ class AmazonAdapter extends BaseAdapter
         }
         return $filepath;
     }
-
 
     /**
      * @param $source
@@ -59,7 +59,7 @@ class AmazonAdapter extends BaseAdapter
     {
         $ext = pathinfo($source, PATHINFO_EXTENSION);
         $unique_path = ArrayHelper::remove($options,'key',$this->uniqueFilePath($ext));
-        $name = str_replace(DIRECTORY_SEPARATOR,'/',$unique_path);
+        $name = str_replace("/",'/',$unique_path);
 
         if(!file_exists($source))
         {
@@ -98,6 +98,23 @@ class AmazonAdapter extends BaseAdapter
 		$model = $this->getClient()->copyObject($options);
 		return $targetKey;
 	}
+
+    /**
+     * http://{MyBucketName}.s3.amazonaws.com/e73de643-4450-4b01-87c5-11c429d00209
+     * @param string $url
+     * @return string|null
+     */
+    public function getBucketByUrl($url)
+    {
+        if(preg_match('@^(?:(?:http|https)://)?([^/]+)@i',$url,$matches))
+        {
+            $host = $matches[1];
+            if( preg_match('@^(.*)\.s3\.amazonaws\.com@i', $host, $matches))
+                return $matches[1];
+        }
+        return null;
+    }
+
 
 
     /**
@@ -140,7 +157,6 @@ class AmazonAdapter extends BaseAdapter
      */
     public function getUrl($name, $expires = NULL)
     {
-
         return $this->getClient()->getObjectUrl($this->bucket, $name, $expires);
     }
 
