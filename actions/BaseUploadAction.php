@@ -20,7 +20,7 @@ class BaseUploadAction extends Action
     const IMAGE_THUMB  = 1;
 
 
-    public static $EXTENSION_IMAGE = ['gif','png','jpg','jpeg'];
+    public static $EXTENSION_IMAGE = ['image/gif','image/png','image/jpg','image/jpeg'];
 
     public $storage = 'tmp';
     public $extension_allowed = [];
@@ -109,7 +109,7 @@ class BaseUploadAction extends Action
         return $this->_result['errors'];
     }
 
-
+    
     /**
      * @param $url
      * @return string|null

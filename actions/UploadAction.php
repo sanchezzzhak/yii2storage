@@ -11,6 +11,7 @@ namespace kak\storage\actions;
 use kak\storage\models\UploadForm;
 
 use Yii;
+use yii\helpers\FileHelper;
 use yii\helpers\Json;
 use yii\web\UploadedFile;
 use yii\web\HttpException;
@@ -84,9 +85,14 @@ class UploadAction extends BaseUploadAction
         $model->size = $file->size;
         $model->mime_type = $file->type;
 
+        $ext_list = [];
+
         if($model->validate()) {
 
-            if (count($this->extension_allowed) && !in_array(pathinfo( strtolower($model->file), PATHINFO_EXTENSION), $this->extension_allowed ))
+            $mime_type = FileHelper::getMimeType($file->tempName);
+            $ext_list  = FileHelper::getExtensionsByMimeType($mime_type);
+
+            if (count($this->extension_allowed) && !in_array($mime_type , $this->extension_allowed ))
             {
                 $model->addError('file','extension file not allowed');
             }
@@ -94,7 +100,7 @@ class UploadAction extends BaseUploadAction
 
         if(!count($model->errors))
         {
-            $ext = strtolower(pathinfo($model->file, PATHINFO_EXTENSION));
+            $ext = count($ext_list) ? end($ext_list) : strtolower(pathinfo($model->file, PATHINFO_EXTENSION));
             $storage = new Storage($this->storage);
             $adapter = $storage->getAdapter();
 

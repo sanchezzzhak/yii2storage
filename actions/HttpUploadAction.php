@@ -9,6 +9,7 @@
 namespace kak\storage\actions;
 use kak\storage\Storage;
 use Yii;
+use yii\helpers\FileHelper;
 use yii\helpers\Json;
 
 /**
@@ -51,32 +52,35 @@ class HttpUploadAction  extends BaseUploadAction
     {
         $url = $this->url;
 
-
         $ch = curl_init($url);
         curl_setopt_array($ch,[
             CURLOPT_HEADER => false,
             CURLOPT_NOBODY => true,
             CURLOPT_FAILONERROR => true,
             CURLOPT_CONNECTTIMEOUT => 10,
-            CURLOPT_RETURNTRANSFER => true
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_SSL_VERIFYPEER => false
         ]);
 
         if(curl_exec($ch)!==false)
         {
             $info = curl_getinfo($ch);
+            list($mime_type) =  explode(';',  $info['content_type'], 2);
+            $ext_list = FileHelper::getExtensionsByMimeType($mime_type);
 
-            curl_close($ch);
             if($info['http_code'] == 200)
             {
                 $this->_result['errors'] = [];
-                $ext = strtolower(pathinfo($info['url'],PATHINFO_EXTENSION));
 
-                if(count($this->extension_allowed) && !in_array($ext,$this->extension_allowed))
+                $ext = count($ext_list) ? end($ext_list):'';
+
+                if(count($this->extension_allowed) && !in_array($mime_type,$this->extension_allowed))
                 {
                     $this->_result['errors']['file'] = Yii::t('app','Wrong format of the file extension');
                     return  $this->response();
                 }
-                else if($info['download_content_length'] >  $this->download_max_size )
+
+                if($info['download_content_length'] >  $this->download_max_size )
                 {
                     $this->_result['errors']['file'] = Yii::t('app','Remote file is too large');
                     return  $this->response();
@@ -90,6 +94,7 @@ class HttpUploadAction  extends BaseUploadAction
                     $ch = curl_init($url);
                     $fp = fopen($save_url, 'w+');
                     curl_setopt($ch, CURLOPT_FILE, $fp);
+                    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
                     curl_setopt($ch, CURLOPT_HEADER, 0);
                     curl_exec($ch);
                     curl_close($ch);
@@ -111,6 +116,13 @@ class HttpUploadAction  extends BaseUploadAction
 
             }
         }
+        pre(curl_getinfo($ch, CURLINFO_CONTENT_TYPE));
+
+        $info = curl_getinfo($ch);
+
+        pre($info);
+        exit;
+
 
         $this->_result['error']['file'] = Yii::t('app','Remote file not exists');
         return  $this->response();
