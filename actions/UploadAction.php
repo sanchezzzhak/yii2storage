@@ -100,7 +100,17 @@ class UploadAction extends BaseUploadAction
 
         if(!count($model->errors))
         {
-            $ext = count($ext_list) ? end($ext_list) : strtolower(pathinfo($model->file, PATHINFO_EXTENSION));
+            $ext_mime_type = count($ext_list) ? end($ext_list): null;
+
+           // strtolower(pathinfo($model->file, PATHINFO_EXTENSION));
+
+            $ext = $this->getExtension($model->file);
+            if($ext === null)
+            {
+                $ext = $ext_mime_type;
+            }
+
+
             $storage = new Storage($this->storage);
             $adapter = $storage->getAdapter();
 

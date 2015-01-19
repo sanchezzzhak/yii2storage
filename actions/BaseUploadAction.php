@@ -118,7 +118,7 @@ class BaseUploadAction extends Action
     {
         if(preg_match('#\.([\w\d]+)(?:\?|$)#is',$url,$matches))
         {
-            return $matches[1];
+            return strtolower($matches[1]);
         }
         return null;
     }

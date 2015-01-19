@@ -72,7 +72,7 @@ class HttpUploadAction  extends BaseUploadAction
             {
                 $this->_result['errors'] = [];
 
-                $ext = count($ext_list) ? end($ext_list):'';
+                $ext_mime_type = count($ext_list) ? end($ext_list):'';
 
                 if(count($this->extension_allowed) && !in_array($mime_type,$this->extension_allowed))
                 {
@@ -84,6 +84,12 @@ class HttpUploadAction  extends BaseUploadAction
                 {
                     $this->_result['errors']['file'] = Yii::t('app','Remote file is too large');
                     return  $this->response();
+                }
+
+                $ext = $this->getExtension($url);
+                if($ext === null)
+                {
+                    $ext = $ext_mime_type;
                 }
 
                 $storage = new Storage($this->storage);
