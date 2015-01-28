@@ -68,6 +68,10 @@ class HttpUploadAction  extends BaseUploadAction
             list($mime_type) =  explode(';',  $info['content_type'], 2);
             $ext_list = FileHelper::getExtensionsByMimeType($mime_type);
 
+            if($mime_type == 'application/octet-stream' && !in_array('application/octet-stream',$this->extension_allowed) )
+                $mime_type =  $this->getExtension($url);
+
+
             if($info['http_code'] == 200)
             {
                 $this->_result['errors'] = [];

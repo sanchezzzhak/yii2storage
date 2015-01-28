@@ -89,8 +89,15 @@ class UploadAction extends BaseUploadAction
 
         if($model->validate()) {
 
-            $mime_type = FileHelper::getMimeType($file->tempName);
-            $ext_list  = FileHelper::getExtensionsByMimeType($mime_type);
+            $mime_type = $file->type;
+            if($mime_type == 'application/octet-stream' )
+                $mime_type = FileHelper::getMimeType($file->tempName);
+
+            if($mime_type != 'application/octet-stream')
+                $ext_list  = FileHelper::getExtensionsByMimeType($mime_type);
+
+            if($mime_type == 'application/octet-stream' && !in_array('application/octet-stream',$this->extension_allowed) )
+                $mime_type = $this->getExtension($model->file);
 
             if (count($this->extension_allowed) && !in_array($mime_type , $this->extension_allowed ))
             {
@@ -101,8 +108,6 @@ class UploadAction extends BaseUploadAction
         if(!count($model->errors))
         {
             $ext_mime_type = count($ext_list) ? end($ext_list): null;
-
-           // strtolower(pathinfo($model->file, PATHINFO_EXTENSION));
 
             $ext = $this->getExtension($model->file);
             if($ext === null)
