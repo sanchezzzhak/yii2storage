@@ -12,6 +12,7 @@ use kak\storage\Storage;
 use Yii;
 use yii\base\Action;
 use yii\base\ErrorException;
+use yii\helpers\ArrayHelper;
 use yii\web\HttpException;
 
 class BaseUploadAction extends Action
@@ -106,7 +107,7 @@ class BaseUploadAction extends Action
 
     public function getErrors()
     {
-        return $this->_result['errors'];
+        return ArrayHelper::getValue($this->_result,'errors',[]);
     }
 
     
