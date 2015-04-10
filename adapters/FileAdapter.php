@@ -140,9 +140,9 @@ class FileAdapter extends BaseAdapter
      */
     public function delete($name)
     {
-        $name = str_replace($this->getBasePath() . "/" . $this->id,'',$name);
+        $name = $this->getAbsolutePath($name);
         parent::delete($name);
-        return $this->fileExists($name) ? @unlink($this->getBasePath() . "/" . $name) : false;
+        return $this->fileExists($name) ? @unlink($name) : false;
     }
 
     /**
@@ -151,8 +151,8 @@ class FileAdapter extends BaseAdapter
      */
     public function fileExists($name)
     {
-        $name = str_replace($this->getBasePath(). "/" . $this->id ,'', $name );
-        return file_exists($this->getBasePath(). "/". ltrim($name,"/"));
+        $name = $this->getAbsolutePath($name);
+        return file_exists($name);
     }
 
 
