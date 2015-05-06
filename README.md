@@ -1,17 +1,9 @@
-Storage and Upload file widget
-
-PLS!
-This is non-stable alpha version. It's not recommended to go in production with it for now.
-Any contributions are welcome
-
-The plans:
-* Widjet Upload analog XUpload Yii.1
-* Storage files to directory categories ( `images`, `baners`, `videos`.. or `custom derictory`)
-* Store to Amason Server
-* Store upload to remote server
+Storage and Upload file 
 
 ============
-file upload/resize/crop file move storage
+file upload/resize
+
+Any contributions are welcome
 
 Installation
 ------------
@@ -19,7 +11,6 @@ Installation
 The preferred way to install this extension is through [composer](http://getcomposer.org/download/).
 
 Either run
-
 ```
 php composer.phar require --prefer-dist kak/storage "*"
 ```
@@ -30,7 +21,7 @@ or add
 "kak/storage": "*"
 ```
 
-to the require section of your `composer.json` file.
+to the require section of your `composer.json` file and run command `composer update`
 
 
 Usage
@@ -48,6 +39,7 @@ $amazon_config = [
     'type'   => 'amazon',
     'region' => 'us-east-1',
 ]
+
 //...
 'storage' => [
     'storages' => [
@@ -60,6 +52,7 @@ $amazon_config = [
         ],
     ],
 ],
+
 ```
 Once the extension is installed, simply use it in your code by:
 
