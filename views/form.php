@@ -1,5 +1,6 @@
 <?php
     use yii\helpers\Html;
+    use \yii\helpers\ArrayHelper;
     /** @var $this \yii\web\View */
 
 $function_download_tmpl = function($model = null , $isJS = true , $options = []) {
@@ -9,9 +10,9 @@ $function_download_tmpl = function($model = null , $isJS = true , $options = [])
     $js.= ($isJS? '{% if( o.result.errors){ %}':'');
     $js.= '<div>Error upload</div>';
     $js.= ($isJS? '{% } else { %}': '');
-    $js.= '<p>File :{%=file.name%} <span class="size">{%=o.formatFileSize(file.size)%}</span>  uploaded success</p>
+    $js.= '<p>File :{%=file.name%} <span class="size">{%=o.formatFileSize(file.size)%}</span>  '.ArrayHelper::getValue($options,'label_success','').'</p>
             <div class="act">
-                <a class="cancel btn inline" href="javascript:;">Delete</a>
+                <a class="cancel btn inline" href="javascript:;">'.ArrayHelper::getValue($options,'label_delete','Delete').'</a>
             </div>';
 
     $js.= Html::hiddenInput('meta[]', $model->meta, ['class'=>'meta']) . "\n";
@@ -22,9 +23,10 @@ $function_download_tmpl = function($model = null , $isJS = true , $options = [])
                 <div class="preview-box hide">
                     <div class="act">';
 
-    $js.= (isset($options['crop']) && $options['crop']) ? '<a href="javascript:;" class="crop btn inline" data-url="{%=o.result.crop_url%}">Crop</a>'."\n": '';
-    $js.= '<a href="javascript:;" class="crop-cancel btn inline">Cancel</a>'."\n";
+    $js.= (isset($options['crop']) && $options['crop']) ?
+        '<a href="javascript:;" class="crop btn inline" data-url="{%=o.result.crop_url%}">'.ArrayHelper::getValue($options,'label_crop','Crop').'</a>'."\n": '';
 
+    $js.= '<a href="javascript:;" class="crop-cancel btn inline">'.ArrayHelper::getValue($options,'label_cancel','Cancel').'</a>'."\n";
     $js.= '         </div>
                     <img src="{%=o.result.images.preview.url%}">
                 </div>
@@ -48,7 +50,7 @@ $function_download_tmpl = function($model = null , $isJS = true , $options = [])
     <div>
         <span class="btn fileinput-button">
             <i class="glyphicon glyphicon-plus"></i>
-            <span><?=$label_btn?></span>
+            <span><?=$this->context->label_btn?></span>
             <?=Html::activeFileInput($model, 'file', $options) . "\n"; ?>
         </span>
     </div>
@@ -64,25 +66,31 @@ $function_download_tmpl = function($model = null , $isJS = true , $options = [])
         <span class="preview"></span>
             <p class="name">{%=file.name%}</p>
             <strong class="error text-danger"></strong>
-            <p class="size">Processing upload...</p>
+            <p class="size"><?=$this->context->label_processing_upload?></p>
             <div class="progress progress-striped active" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
                 <div class="progress-bar bar" style="width:0%;"></div>
             </div>
             {% if (!i && !o.autoUpload) { %}
             <button class="btn inline btn-primary start" disabled>
                 <i class="glyphicon glyphicon-upload"></i>
-                <span>Start</span>
+                <span><?=$this->context->label_start?></span>
             </button>
             {% } %}
             {% if (!i) { %}
             <button class="btn inline btn-warning cancel">
                 <i class="glyphicon glyphicon-ban-circle"></i>
-                <span>Cancel</span>
+                <span><?=$this->context->label_cancel?></span>
             </button>
             {% } %}
     </div>
     {% } %}
 </script>
 <script id="tmpl-download" type="text/x-tmpl">
-    <?php $function_download_tmpl($model,true,['crop'=> $crop]); ?>
+    <?php $function_download_tmpl($model,true,[
+        'crop'=> $crop,
+        'label_success' => $this->context->label_success,
+        'label_crop'    => $this->context->label_crop,
+        'label_cancel'  => $this->context->label_cancel,
+        'label_delete'  => $this->context->label_delete,
+    ]); ?>
 </script>
