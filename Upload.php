@@ -30,22 +30,22 @@ class Upload extends Widget
     public $url = '/upload';
     public $auto_upload = true;
 	public $multiple = true;
-	public $max_uploads = 2;
     public $progressbarall = false;
     public $crop = true;
     public $single_upload = true;
+
     public $options = [];
     public $view = 'form';
 
 
-
-    public $label_btn = 'Add files...';
-    public $label_success = 'uploaded success';
+    public $label_btn               = 'Add files...';
+    public $label_success           = 'uploaded success';
     public $label_processing_upload = 'Processing upload...';
-    public $label_crop = 'Crop';
-    public $label_start = 'Start';
-    public $label_cancel = 'Cancel';
-    public $label_delete = 'Delete';
+    public $label_upload_error      = 'uploading error...';
+    public $label_crop              = 'Crop';
+    public $label_start             = 'Start';
+    public $label_cancel            = 'Cancel';
+    public $label_delete            = 'Delete';
 
 	public function init()
 	{
@@ -62,19 +62,16 @@ class Upload extends Widget
         }
 	}
 
+    /**
+     * @return string
+     */
 	public function run()
 	{
         $this->options['multiple']  = ($this->multiple == true);
 
 		return $this->render($this->view ,[
-            'url'         => $this->url,
-            'multiple'    => $this->multiple,
-            'auto_upload' => $this->auto_upload,
 			'model'       => $this->model,
-            'options'     => $this->options,
-            'crop'        => $this->crop,
-            'progressbarall' => $this->progressbarall,
-            'single_upload' => $this->single_upload,
+            'options'     => $this->options
 		]);
 	}
 

@@ -105,6 +105,9 @@ $(function(){
                             return false;
                         });
 
+                        data.context.find('.error-upload').on('click', function() {
+                        });
+
                         // crop event init
                         if($this.find(_class).data('crop')) {
 
