@@ -20,7 +20,6 @@ class BaseUploadAction extends Action
     const IMAGE_RESIZE = 0;
     const IMAGE_THUMB  = 1;
 
-
     public static $EXTENSION_IMAGE = ['image/gif','image/png','image/jpg','image/jpeg'];
 
     public $storage = 'tmp';
@@ -90,7 +89,6 @@ class BaseUploadAction extends Action
                         $this->resizeImageThumbnail($path_file , $image_path_save , $image_width, $image_height );
                         break;
                 }
-                //$this->_result['images'][$prefix]['path'] = $image_save;
                 $this->_result['images'][$prefix]['url']  = $adapter->getUrl($image_save) ;
             }
         }
@@ -98,19 +96,21 @@ class BaseUploadAction extends Action
     }
 
     /**
-     * @return mixed
+     * @return array
      */
     public function getResult()
     {
         return $this->_result;
     }
 
+    /**
+     * @return array
+     */
     public function getErrors()
     {
         return ArrayHelper::getValue($this->_result,'errors',[]);
     }
 
-    
     /**
      * @param $url
      * @return string|null

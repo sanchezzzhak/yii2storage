@@ -66,18 +66,18 @@ class UploadAction extends BaseUploadAction
     }
 
     /**
-     * @return string
+     * @return string|null
      */
     protected function handleUploading()
     {
         $result = [];
-        /** @var \kak\storage\models\UploadForm $model */
+        /** @var $model \kak\storage\models\UploadForm */
         $method  = Yii::$app->request->get('_method');
 
         $model = $this->form_model;
-        if(! $file = UploadedFile::getInstance($model,'file'))
+        if(!$file = UploadedFile::getInstance($model,'file'))
         {
-            return;
+            return null;
         }
 
         // set model attr
@@ -85,21 +85,21 @@ class UploadAction extends BaseUploadAction
         $model->size = $file->size;
         $model->mime_type = $file->type;
 
-        $ext_list = [];
+        $extList = [];
 
         if($model->validate()) {
 
-            $mime_type = $file->type;
-            if($mime_type == 'application/octet-stream' )
-                $mime_type = FileHelper::getMimeType($file->tempName);
+            $mimeType = $file->type;
+            if($mimeType == 'application/octet-stream' )
+                $mimeType = FileHelper::getMimeType($file->tempName);
 
-            if($mime_type != 'application/octet-stream')
-                $ext_list  = FileHelper::getExtensionsByMimeType($mime_type);
+            if($mimeType != 'application/octet-stream')
+                $extList  = FileHelper::getExtensionsByMimeType($mimeType);
 
-            if($mime_type == 'application/octet-stream' && !in_array('application/octet-stream',$this->extension_allowed) )
-                $mime_type = $this->getExtension($model->file);
+            if($mimeType == 'application/octet-stream' && !in_array('application/octet-stream',$this->extension_allowed) )
+                $mimeType = $this->getExtension($model->file);
 
-            if (count($this->extension_allowed) && !in_array($mime_type , $this->extension_allowed ))
+            if (count($this->extension_allowed) && !in_array($mimeType , $this->extension_allowed ))
             {
                 $model->addError('file','extension file not allowed');
             }
@@ -107,24 +107,24 @@ class UploadAction extends BaseUploadAction
 
         if(!count($model->errors))
         {
-            $ext_mime_type = count($ext_list) ? end($ext_list): null;
+            $extMimeType = count($extList) ? end($extList): null;
 
             $ext = $this->getExtension($model->file);
             if($ext === null)
             {
-                $ext = $ext_mime_type;
+                $ext = $extMimeType;
             }
 
 
             $storage = new Storage($this->storage);
             $adapter = $storage->getAdapter();
 
-            $path_file = $adapter->uniqueFilePath($ext);
-            $model->file = $adapter->getUrl($path_file);
+            $pathFile = $adapter->uniqueFilePath($ext);
+            $model->file = $adapter->getUrl($pathFile);
 
-            if(!count($model->getErrors()) && $file->error == 0 && $file->saveAs($path_file))
+            if(!count($model->getErrors()) && $file->error == 0 && $file->saveAs($pathFile))
             {
-                chmod($path_file , 0666);
+                chmod($pathFile , 0666);
                 $returnValue = $this->beforeReturn();
                 if ($returnValue === true)
                 {

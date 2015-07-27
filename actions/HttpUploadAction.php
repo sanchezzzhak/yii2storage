@@ -126,13 +126,8 @@ class HttpUploadAction  extends BaseUploadAction
 
             }
         }
-        pre(curl_getinfo($ch, CURLINFO_CONTENT_TYPE));
-
-        $info = curl_getinfo($ch);
-
-        pre($info);
-        exit;
-
+        //pre(curl_getinfo($ch, CURLINFO_CONTENT_TYPE));
+        //$info = curl_getinfo($ch);
 
         $this->_result['error']['file'] = Yii::t('app','Remote file not exists');
         return  $this->response();

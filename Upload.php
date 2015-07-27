@@ -66,7 +66,7 @@ class Upload extends Widget
 	}
 
     /**
-     * Register assets 
+     * Register assets
      */
     protected function registerAssets()
     {
