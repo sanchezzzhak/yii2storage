@@ -48,12 +48,15 @@ class Upload extends Widget
     public $label_cancel            = 'Cancel';
     public $label_delete            = 'Delete';
 
+    /**
+     * Init widget
+     */
 	public function init()
 	{
 		parent::init();
+        $this->registerAssets();
 
-        CropperAsset::register($this->getView());
-        FileUploadAsset::register($this->getView());
+        $this->options['multiple']  = ($this->multiple == true);
 
         if(!$this->id )
         {
@@ -63,12 +66,21 @@ class Upload extends Widget
 	}
 
     /**
+     * Register assets 
+     */
+    protected function registerAssets()
+    {
+        $view = $this->getView();
+        CropperAsset::register($view);
+        FileUploadAsset::register($view);
+        StorageAsset::register($view);
+    }
+    /**
+     * Run widget
      * @return string
      */
 	public function run()
 	{
-        $this->options['multiple']  = ($this->multiple == true);
-
 		return $this->render($this->view ,[
 			'model'       => $this->model,
             'options'     => $this->options
