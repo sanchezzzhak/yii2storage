@@ -113,11 +113,11 @@ class HttpUploadAction  extends BaseUploadAction
                     $rel_path = $storage->getAdapter()->getUrl($save_url);
 
                     $this->_result = [
-                        "name"         => $rel_path,
                         "name_display" => null,
                         "type"         => null,
                         "size"         => $info['download_content_length'],
                         "url"          => $rel_path,
+                        "storage"      => $storage->getId(),
                         "images"       => [],
                     ];
                     $this->_image( $rel_path);

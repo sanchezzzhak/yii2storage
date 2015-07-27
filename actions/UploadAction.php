@@ -26,7 +26,7 @@ class UploadAction extends BaseUploadAction
 
     public $form_name;
     public $form_model;
-    public $header  = false;
+    public $header      = false;
 
     public $random_name = false;
 
@@ -115,7 +115,6 @@ class UploadAction extends BaseUploadAction
                 $ext = $extMimeType;
             }
 
-
             $storage = new Storage($this->storage);
             $adapter = $storage->getAdapter();
 
@@ -129,11 +128,11 @@ class UploadAction extends BaseUploadAction
                 if ($returnValue === true)
                 {
                     $this->_result = [
-                        "name"         => $model->file,
                         "name_display" => $file->name,
                         "type"         => $model->mime_type,
                         "size"         => $model->size,
                         "url"          => $model->file,
+                        "storage"      => $storage->getId(),
                         "images"       => [],
                     ];
 

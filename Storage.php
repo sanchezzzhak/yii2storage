@@ -56,6 +56,7 @@ class Storage extends Component
     public  $storages;
 
 
+
     public function __construct($id, $config = [])
     {
 
@@ -79,6 +80,15 @@ class Storage extends Component
 
         $this->id = $id;
     }
+
+    /**
+     * @return string
+     */
+    public function getId()
+    {
+        return $this->id;
+    }
+
 
     /**
      * @param $id
