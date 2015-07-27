@@ -1,9 +1,13 @@
-Storage and Upload file 
-
+Storage and Upload file for Yii2
 ============
 file upload/resize
 
 Any contributions are welcome
+Preview
+-----------
+<img src="https://lh3.googleusercontent.com/--sDmh3Ca8UA/VbXsQf_UxoI/AAAAAAAAADo/STR3DrTrdDU/s477-Ic42/PreviewUpload.png">
+
+<a href="https://picasaweb.google.com/104329650875154427869/KakGithub#6176102228563362898" target="_blank">Crop Preview (large image)<a>
 
 Installation
 ------------

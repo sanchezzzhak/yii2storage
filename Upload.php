@@ -4,6 +4,7 @@ namespace kak\storage;
 use Yii;
 use yii\base\Widget;
 use yii\base\Model;
+use yii\helpers\Url;
 
 /**
  * Class Upload Widget
@@ -55,7 +56,7 @@ class Upload extends Widget
 	{
 		parent::init();
         $this->registerAssets();
-
+        $this->url = Url::to($this->url);
         $this->options['multiple']  = ($this->multiple == true);
 
         if(!$this->id )
