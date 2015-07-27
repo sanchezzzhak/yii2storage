@@ -51,9 +51,6 @@
     {% } %}
 </script>
 
-
-
-
 <script id="tmpl-download" type="text/x-tmpl">
 
 {% for (var i=0, file; file = o.files[i]; i++) { %}
@@ -93,5 +90,4 @@
 
     </div>
 {% } %}
-
 </script>

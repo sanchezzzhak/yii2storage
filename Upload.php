@@ -28,6 +28,7 @@ class Upload extends Widget
      * Config JQuery Upload File
      */
     public $url = '/upload';
+
     public $auto_upload = true;
 	public $multiple = true;
     public $progressbarall = false;
@@ -49,11 +50,10 @@ class Upload extends Widget
 
 	public function init()
 	{
-
 		parent::init();
 
-        CropperAssets::register($this->getView());
-        UploadAssets::register($this->getView());
+        CropperAsset::register($this->getView());
+        FileUploadAsset::register($this->getView());
 
         if(!$this->id )
         {
