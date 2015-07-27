@@ -35,7 +35,7 @@
                     <div class="act">
                         <a class="cancel btn inline" href="javascript:;"><?=$context->labelDelete?></a>
                     </div>
-                    <?= Html::hiddenInput('meta[]', '', ['class'=>'meta'])?>
+                    <?= Html::hiddenInput('meta[]', \yii\helpers\Json::encode($meta), ['class'=>'meta'])?>
                     <?php if(count($meta['images'])):?>
                         <span>
                             <a class="preview" href="javascript:;"><img src="<?=ArrayHelper::getValue($meta['images'],'thumbnail.url')?>"></a>

@@ -67,7 +67,7 @@ class UploadForm extends Model
                     $fileSource   =  $adapterTmp->getAbsolutePath($url);
                     $photoPath    =  $storageRemote->save($fileSource,$options);
 
-                    $resultItem['path']         = $storageRemote->getAdapter()->getUrl($photoPath);
+                    $resultItem['url']          = $storageRemote->getAdapter()->getUrl($photoPath);
                     $resultItem['storage']      = $storageTo;
                     $resultItem['name_display'] = ArrayHelper::getValue($data,'name_display',null);
                     $resultItem['size']         = ArrayHelper::getValue($data,'size',0);
@@ -88,7 +88,10 @@ class UploadForm extends Model
                     $result[] = $resultItem;
 
                     $this->_newValue = true;
+                    continue;
                 }
+
+                $result[] = $data;
             }
         }
         return $result;
