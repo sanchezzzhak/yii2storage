@@ -86,7 +86,7 @@ Save model then controller
     {
         $postModel = $this->findPostById($id);
         $uploadFormModel = new \kak\storage\models\UploadForm;
-        $uploadFormModel->meta = $wapOfferModel->images_json;
+        $uploadFormModel->meta = $postModel->images_json;
 
         if($this->savePostForm($wapOfferModel, $uploadFormModel)) {
             return $this->redirect(['/dashboard/post/update','id' => $postModel->id]);
