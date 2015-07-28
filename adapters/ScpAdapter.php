@@ -1,8 +1,7 @@
 <?php
 
 namespace kak\storage\adapters;
-
-
+use yii\base\Application;
 use yii\base\Exception;
 use Yii;
 use yii\helpers\ArrayHelper;
@@ -40,9 +39,7 @@ class ScpAdapter extends BaseAdapter implements AdapterInterface
 		{
 			throw new Exception('property username required');
 		}
-
 	}
-
 
 
 	/**
@@ -56,7 +53,7 @@ class ScpAdapter extends BaseAdapter implements AdapterInterface
 		if(!empty($this->public_key) && !empty($this->private_key))
 		{
 			if (ssh2_auth_pubkey_file($this->_conn, $this->username, Yii::getAlias($this->public_key) , Yii::getAlias($this->private_key)) === false) {
-				throw new Exception('SSH2 login is invalid');
+				throw new Exception('SSH2 login is invalid public_key/private');
 			}
 			return $this->_conn;
 		}
@@ -79,30 +76,30 @@ class ScpAdapter extends BaseAdapter implements AdapterInterface
 	 */
 	public function uniqueFilePath($ext = null)
 	{
-		$filename = $this->generateName(FileAdapter::GENERATE_SHA1) . (!empty($ext) ? '.' . $ext: '');
-		$filedir = $this->public_path . "/" . $this->id;
+		$fileName = $this->generateName(FileAdapter::GENERATE_SHA1) . (!empty($ext) ? '.' . $ext: '');
+		$fileDir = $this->public_path . "/" . $this->id;
 		for ($i = 0; $i < $this->level; $i++)
 		{
-			if (!$this->fileExists($filedir))
+			if (!$this->fileExists($fileDir))
 			{
-				$message = Yii::t('yii', 'Directory not exists: {filedir}', array('filedir' => $filedir));
+				$message = Yii::t('yii', 'Directory not exists: {fileDir}', array('fileDir' => $fileDir));
 				throw new Exception($message);
 			}
-			$filedir .= "/" . substr($filename, $i * 2, 2);
-			$this->_mkdir($filedir);
+			$fileDir .= "/" . substr($fileName, $i * 2, 2);
+			$this->mkDir($fileDir);
 		}
-		$filepath = $filedir . "/" . $filename;
-		if ($this->fileExists($filepath))
+		$filePath = $fileDir . "/" . $fileName;
+		if ($this->fileExists($filePath))
 		{
-			$filepath = $this->uniqueFilePath($ext);
+			$filePath = $this->uniqueFilePath($ext);
 		}
-		return $filepath;
+		return $filePath;
 	}
 
 
-	private function _mkdir($name)
+	private function mkDir($name)
 	{
-		$session = ssh2_sftp( $this->getConnect() );
+		$session = $this->getResource();
 		return @mkdir('ssh2.sftp://' . $session .  $this->getBasePath() . "/" . ltrim($name,'/') );
 	}
 
@@ -117,27 +114,63 @@ class ScpAdapter extends BaseAdapter implements AdapterInterface
         return $this->base_path = $path;
     }
 
-	/*
-	 * @param $source
-	 * @param array $options
-	 */
+    /**
+     * @param $source
+     * @param array $options
+     * @return string|void
+     * @throws Exception
+     */
     public function save($source, $options = [])
 	{
 		$ext = pathinfo($source,PATHINFO_EXTENSION);
-		$storage_filepath = $this->uniqueFilePath($ext);
+		$storageFilePath = $this->uniqueFilePath($ext);
 
-		$remote = $this->getBasePath() . "/" . ltrim( $storage_filepath,"/");
+		$remote = $this->getBasePath() . "/" . ltrim( $storageFilePath,"/");
 		ssh2_scp_send($this->getConnect(), $source,  $remote);
 
-		$delete_after = ArrayHelper::getValue($options,'delete_after',self::MOVE_MODE);
-		if ($delete_after === self::MOVE_MODE)
+		$deleteAfter = ArrayHelper::getValue($options,'delete_after',self::MOVE_MODE);
+		if ($deleteAfter === self::MOVE_MODE)
 			@unlink($source);
 
 
 		parent::save($source,$options);
-		return $storage_filepath;
+		return $storageFilePath;
 	}
 
+
+    /**
+     * Renames a remote file
+     *
+     * @param  string $from The current file that is being renamed
+     * @param  string $to   The new file name that replaces from
+     *
+     * @return Boolean TRUE on success, or FALSE on failure
+     */
+    public function rename($from, $to)
+    {
+        return ssh2_sftp_rename($this->getResource(), $from, $to);
+    }
+
+    /**
+     * @param $name
+     * @return bool|void
+     */
+    public function delete($name){
+        $name = ltrim($name,'/');
+        $session = $this->getResource();
+        return ($this->fileExists($name) && !empty($name)) ?
+            @unlink("ssh2.sftp://". $session .  $this->getBasePath() . "/" . $name) : false;
+
+    }
+
+    /**
+     * @return resource
+     * @throws Exception
+     */
+    private function getResource()
+    {
+        return ssh2_sftp( $this->getConnect() );
+    }
 
 	/**
 	 * @param $name
@@ -145,7 +178,7 @@ class ScpAdapter extends BaseAdapter implements AdapterInterface
 	 */
 	public function fileExists($name)
 	{
-		$session = ssh2_sftp( $this->getConnect() );
+		$session = $this->getResource();
 		return file_exists('ssh2.sftp://' . $session .  $this->getBasePath() . "/" . ltrim($name,'/') );
 	}
 }
