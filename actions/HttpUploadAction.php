@@ -110,6 +110,8 @@ class HttpUploadAction  extends BaseUploadAction
                     curl_close($ch);
                     fclose($fp);
 
+
+
                     $rel_path = $storage->getAdapter()->getUrl($save_url);
 
                     $this->_result = [

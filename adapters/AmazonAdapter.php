@@ -16,7 +16,7 @@ use yii\helpers\ArrayHelper;
 use Yii;
 
 
-class AmazonAdapter extends BaseAdapter
+class AmazonAdapter extends BaseAdapter implements AdapterInterface
 {
     public $key;
     public $secret;
@@ -115,8 +115,6 @@ class AmazonAdapter extends BaseAdapter
         return null;
     }
 
-
-
     /**
      * Removes a file
      * @param string $name the name of the file to remove
@@ -152,11 +150,12 @@ class AmazonAdapter extends BaseAdapter
     /**
      * Returns the url of the file or empty string if the file does not exists.
      * @param string $name the key name of the file to access
-     * @param mixed $expires The time at which the URL should expire
+     * @param Array $options options
      * @return string
      */
-    public function getUrl($name, $expires = NULL)
+    public function getUrl($name, $options = [] )
     {
+        $expires = ArrayHelper::getValue($options,'expires',NULL);
         return $this->getClient()->getObjectUrl($this->bucket, $name, $expires);
     }
 

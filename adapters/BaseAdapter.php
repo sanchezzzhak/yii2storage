@@ -1,21 +1,21 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: PHPdev
- * Date: 25.12.2014
- * Time: 11:04
- */
 
 namespace kak\storage\adapters;
 use yii\base\Component;
 use yii\base\Event;
 use Yii;
 
+/**
+ * Class BaseAdapter
+ * @package kak\storage\adapters
+ */
 class BaseAdapter extends Component
 {
-    const EVENT_SAVE      = 'save';
-    const EVENT_DELETE    = 'delete';
-    const EVENT_RENAME    = 'rename';
+    const EVENT_SAVE   = 'event.save';
+    const EVENT_DELETE = 'event.delete';
+    const EVENT_RENAME = 'event.rename';
+    const EVENT_COPY   = 'event.copy';
+    const EVENT_UNIQUE_FILE_PATH  = 'event.uniqueFilePath';
 
     const GENERATE_SYSTEM = 0;
     const GENERATE_SHA1 = 1;
@@ -62,7 +62,8 @@ class BaseAdapter extends Component
      */
     public function copy($sourceKey, $targetKey, $options = [])
 	{
-
+        $event = new Event;
+        $this->trigger(BaseAdapter::EVENT_COPY , $event);
 	}
 
     public function delete($name)
@@ -77,7 +78,10 @@ class BaseAdapter extends Component
         $this->trigger(BaseAdapter::EVENT_RENAME , $event);
     }
 
-    public function uniqueFilePath($ext = null){}
+    public function uniqueFilePath($ext = null){
+        $event = new Event;
+        $this->trigger(BaseAdapter::EVENT_UNIQUE_FILE_PATH , $event);
+    }
 
     /**
      * @param $type

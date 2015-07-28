@@ -5,7 +5,7 @@ use Yii;
 use yii\base\Exception;
 use yii\helpers\ArrayHelper;
 
-class FileAdapter extends BaseAdapter
+class FileAdapter extends BaseAdapter implements AdapterInterface
 {
     const MOVE_MODE = 1;
     const MOVE_COPY = 0;
@@ -66,7 +66,7 @@ class FileAdapter extends BaseAdapter
      * @param string $name the name of the file
      * @return string
      */
-    public function getUrl($name)
+    public function getUrl($name, $options = [])
     {
         $name = str_replace($this->getBasePath() . "/" . $this->id ,'',  $name );
         return $this->getBaseUrl() . "/" . $this->id . "/" . trim($name,'/\\');
@@ -116,6 +116,8 @@ class FileAdapter extends BaseAdapter
     /**
      * @param $source
      * @param array $options
+     * @return string|void
+     * @throws Exception
      */
     public function save($source, $options = [])
     {
@@ -154,6 +156,4 @@ class FileAdapter extends BaseAdapter
         $name = $this->getAbsolutePath($name);
         return file_exists($name);
     }
-
-
 }

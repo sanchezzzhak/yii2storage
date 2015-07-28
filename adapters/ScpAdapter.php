@@ -7,11 +7,10 @@ use yii\base\Exception;
 use Yii;
 use yii\helpers\ArrayHelper;
 
-class ScpAdapter extends BaseAdapter
+class ScpAdapter extends BaseAdapter implements AdapterInterface
 {
 	const MOVE_MODE = 1;
 	const COPY_MODE = 0;
-
 
 	public $host;
 	public $port = 22;
@@ -113,6 +112,11 @@ class ScpAdapter extends BaseAdapter
 		return $this->base_path;
 	}
 
+    public function setBasePath($path)
+    {
+        return $this->base_path = $path;
+    }
+
 	/*
 	 * @param $source
 	 * @param array $options
@@ -120,7 +124,7 @@ class ScpAdapter extends BaseAdapter
     public function save($source, $options = [])
 	{
 		$ext = pathinfo($source,PATHINFO_EXTENSION);
-		$storage_filepath = 		$this->uniqueFilePath($ext);
+		$storage_filepath = $this->uniqueFilePath($ext);
 
 		$remote = $this->getBasePath() . "/" . ltrim( $storage_filepath,"/");
 		ssh2_scp_send($this->getConnect(), $source,  $remote);
@@ -132,16 +136,6 @@ class ScpAdapter extends BaseAdapter
 
 		parent::save($source,$options);
 		return $storage_filepath;
-	}
-
-	/**
-	 * @param $sourceKey
-	 * @param $targetKey
-	 * @param array $options
-	 */
-	public function copy($sourceKey, $targetKey, $options = [])
-	{
-
 	}
 
 
