@@ -16,6 +16,6 @@ class TmplAsset extends AssetBundle
     ];
 
     public $js = [
-        'js\tmpl.min.js'
+        'js/tmpl.min.js'
     ];
 }
