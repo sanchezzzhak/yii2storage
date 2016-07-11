@@ -8,6 +8,7 @@
 
 namespace kak\storage\actions;
 
+use Imagine\Imagick\Imagine;
 use kak\storage\Storage;
 use Yii;
 use yii\base\Action;
@@ -31,6 +32,11 @@ class BaseUploadAction extends Action
     public $resize_image = [
         'preview'   => [600,400, UploadAction::IMAGE_RESIZE],
         'thumbnail' => [120,120, UploadAction::IMAGE_THUMB]
+    ];
+
+    public $image_options = [
+        'quality' => 100
+        //'flatten' => false
     ];
 
     public $_result = [];
@@ -67,8 +73,8 @@ class BaseUploadAction extends Action
 
         /*** Image if */
         list($width, $height) = @getimagesize($path_file);
-        if($width > 0 || $height > 0)
-        {
+        if($width > 0 || $height > 0) {
+
             $this->resizeImageMaxOptimisation($path_file);
 
             foreach($this->resize_image as $prefix => $param )
@@ -130,13 +136,14 @@ class BaseUploadAction extends Action
      * @param $path_thumbnail_file
      * @param int $resize_width
      * @param int $resize_height
+     * @return Imagine
      */
     public function resizeImageThumbnail($path , $path_thumbnail_file,  $resize_width = 0, $resize_height = 0)
     {
         $imagine = $this->getImageDriver();
         $img = $imagine->open($path);
         return $img->thumbnail(new \Imagine\Image\Box($resize_width , $resize_height ),\Imagine\Image\ImageInterface::THUMBNAIL_OUTBOUND )
-            ->save($path_thumbnail_file, ['quality' => 100]);
+            ->save($path_thumbnail_file, ['quality' => 100, 'flatten' => false]);
     }
 
     /**
@@ -183,7 +190,7 @@ class BaseUploadAction extends Action
         }
 
         return $img->resize(new \Imagine\Image\Box($width, $height) )
-            ->save($path_preview_file, ['quality' => 100]);
+            ->save($path_preview_file, $this->image_options );
 
     }
 

@@ -99,8 +99,7 @@ class UploadAction extends BaseUploadAction
             if($mimeType == 'application/octet-stream' && !in_array('application/octet-stream',$this->extension_allowed) )
                 $mimeType = $this->getExtension($model->file);
 
-            if (count($this->extension_allowed) && !in_array($mimeType , $this->extension_allowed ))
-            {
+            if (count($this->extension_allowed) && !in_array($mimeType , $this->extension_allowed )) {
                 $model->addError('file','extension file not allowed');
             }
         }
@@ -110,8 +109,7 @@ class UploadAction extends BaseUploadAction
             $extMimeType = count($extList) ? end($extList): null;
 
             $ext = $this->getExtension($model->file);
-            if($ext === null)
-            {
+            if($ext === null) {
                 $ext = $extMimeType;
             }
 
