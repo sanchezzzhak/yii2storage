@@ -68,50 +68,60 @@ Example use controller this uploading
              'upload' => [
                  'class' => UploadAction::className(),
                  'form_name' => 'kak\storage\models\UploadForm',
-                 'storage'  => 'tmp',
-                 'resize_image' => [
-                     'preview'   => [1024,1024, UploadAction::IMAGE_RESIZE],
+                 'storage'  => 'tmp',   // save image default tmp storage
+                 'resize_image' => [    // list formats
+                     'preview'   => [1024,1024, UploadAction::IMAGE_RESIZE, 'options' => [] ],
                      'thumbnail' => [120,120, UploadAction::IMAGE_THUMB],
-                     '350' => [350,280, UploadAction::IMAGE_RESIZE],
+                     '350'       => [350,280, UploadAction::IMAGE_RESIZE],
                  ]
              ],
          ];
      }
 ```
 
+resize_image.options 
+- animate if true then save image gif animated else first moveclip
+- quality 10 - 100
+- optimisation: if true then resize size optimal size image else save image original tmp storage
+
+
+
 Save model then controller
 ```php
 
+    /**
+    * @param $id int edit post
+    * @return string
+    */         
     public function actionUpdate($id)
     {
-        $postModel = $this->findPostById($id);
-        $uploadFormModel = new \kak\storage\models\UploadForm;
-        $uploadFormModel->meta = $postModel->images_json;
+        $model = $this->findPostById($id);
+        $uploadForm = new \kak\storage\models\UploadForm;
+        $uploadForm->meta = $postModel->images_json;
 
-        if($this->savePostForm($wapOfferModel, $uploadFormModel)) {
+        if($this->savePostForm($model, $uploadForm)) {
             return $this->redirect(['/dashboard/post/update','id' => $postModel->id]);
         }
         return $this->render('form',compact(
-            'postModel','uploadFormModel'
+            'model', 'uploadForm'
         ));
     }
 
     /**
-     * @param $postModel Post
-     * @param $uploadFormModel \kak\storage\models\UploadForm
+     * @param $model Post
+     * @param $uploadForm \kak\storage\models\UploadForm
      * @return bool
      */
-    protected function savePostForm(&$postModel,&$uploadFormModel)
+    protected function savePostForm(&$model,&$uploadForm)
     {
-        if ($postModel->load(Yii::$app->request->post()) && $postModel->validate()) {
+        if ($model->load(Yii::$app->request->post()) && $model->validate()) {
 
-            $result = $uploadFormModel->saveToStorage('tmp','images',[]);
-            $postModel->images_json = Json::encode($result);
-
-            if($postModel->save()){
-                return true;
-            }
+            $result = $uploadForm->saveToStorage('tmp','images',[]);
+            $model->images_json = Json::encode($result);
+            
+            return $model->save();
         }
+        
         return false;
     }
 ```
@@ -122,8 +132,9 @@ Once the extension is installed, simply use it in your code by:
 <div>
     <?=\kak\storage\Upload::widget([
         'model' => $uploadFormModel,
-        'url' => ['/dashboard/default/upload']    
+        'url' => ['/dashboard/default/upload', 'resize_type' => 'thumbnail,350']    
     ]); ?>
 </div>
 <hr>
 ```
+if arg name resize_type in GET only these types will be saved resize images
