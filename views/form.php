@@ -8,7 +8,7 @@
     $arrMeta = \yii\helpers\Json::decode($model->meta);
 ?>
 
-<div class="yii2upload"
+<div class="yii2upload kak-storage-upload" id="<?=$context->id?>"
      data-url="<?=$context->url?>"
      data-multiple="<?=(int)$context->multiple?>"
      data-crop="<?=(int)$context->crop?>"

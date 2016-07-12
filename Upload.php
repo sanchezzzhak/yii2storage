@@ -82,6 +82,11 @@ class Upload extends Widget
      */
 	public function run()
 	{
+        $id   = $this->id;
+        $view = $this->getView();
+        $js = "jQuery('#$id').kakStorageUpload({})";
+        $view->registerJs($js,$view::POS_READY, 'kak-storage-upload');
+
 		return $this->render($this->view ,[
 			'model'       => $this->model,
             'options'     => $this->options

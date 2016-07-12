@@ -34,9 +34,8 @@ class BaseUploadAction extends Action
         'thumbnail' => [120,120, UploadAction::IMAGE_THUMB]
     ];
 
-    public $image_options = [
+    public $default_image_options = [
         'quality' => 100
-        //'flatten' => false
     ];
 
     public $_result = [];
@@ -67,20 +66,36 @@ class BaseUploadAction extends Action
      */
     public function _image($model_file)
     {
+
         $storage = new Storage($this->storage);
         $adapter = $storage->getAdapter();
         $path_file = $adapter->getAbsolutePath($model_file);
+
+        $resize_type = Yii::$app->request->get('resize_type');
+        if(!empty($resize_type) && $resize_type = explode(',',$resize_type)){
+            $sizes = [];
+            foreach($resize_type as $type){
+                if(isset($this->resize_image[$type])){
+                    $sizes[$type] = $this->resize_image[$type];
+                }
+            }
+            $this->resize_image = $sizes;
+        }
+
 
         /*** Image if */
         list($width, $height) = @getimagesize($path_file);
         if($width > 0 || $height > 0) {
 
-            $this->resizeImageMaxOptimisation($path_file);
+            //$this->resizeImageMaxOptimisation($path_file);
 
-            foreach($this->resize_image as $prefix => $param )
-            {
+            foreach($this->resize_image as $prefix => $param ) {
+
                 list($image_width, $image_height) = $param;
                 $type = isset($param[2]) ? $param[2] : UploadAction::IMAGE_RESIZE;
+
+                $options = ArrayHelper::getValue($param,'options',[]);
+                $options = array_merge($this->default_image_options,$options);
 
                 $info_path       = pathinfo($path_file);
                 $image_save      = $info_path['dirname'] . '/' . $prefix . '_' . $info_path['basename'];
@@ -89,10 +104,10 @@ class BaseUploadAction extends Action
                 switch($type)
                 {
                     case UploadAction::IMAGE_RESIZE:
-                        $this->resizeImagePreview($path_file , $image_path_save , $image_width, $image_height );
+                        $this->resizeImagePreview($path_file, $image_path_save, $image_width, $image_height , $options);
                         break;
                     case UploadAction::IMAGE_THUMB:
-                        $this->resizeImageThumbnail($path_file , $image_path_save , $image_width, $image_height );
+                        $this->resizeImageThumbnail($path_file, $image_path_save, $image_width, $image_height, $options);
                         break;
                 }
                 $this->_result['images'][$prefix]['url']  = $adapter->getUrl($image_save) ;
@@ -138,12 +153,12 @@ class BaseUploadAction extends Action
      * @param int $resize_height
      * @return Imagine
      */
-    public function resizeImageThumbnail($path , $path_thumbnail_file,  $resize_width = 0, $resize_height = 0)
+    public function resizeImageThumbnail($path , $path_thumbnail_file,  $resize_width = 0, $resize_height = 0 , $options = [] )
     {
         $imagine = $this->getImageDriver();
         $img = $imagine->open($path);
         return $img->thumbnail(new \Imagine\Image\Box($resize_width , $resize_height ),\Imagine\Image\ImageInterface::THUMBNAIL_OUTBOUND )
-            ->save($path_thumbnail_file, ['quality' => 100, 'flatten' => false]);
+            ->save($path_thumbnail_file, $options );
     }
 
     /**
@@ -167,7 +182,7 @@ class BaseUploadAction extends Action
      * @param int $resize_width
      * @param int $resize_height
      */
-    public function resizeImagePreview($path , $path_preview_file , $resize_width = 0, $resize_height = 0)
+    public function resizeImagePreview($path , $path_preview_file , $resize_width = 0, $resize_height = 0, $options = [])
     {
         $imagine = $this->getImageDriver();
 
@@ -190,7 +205,7 @@ class BaseUploadAction extends Action
         }
 
         return $img->resize(new \Imagine\Image\Box($width, $height) )
-            ->save($path_preview_file, $this->image_options );
+            ->save($path_preview_file, $options );
 
     }
 

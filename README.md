@@ -82,9 +82,6 @@ Example use controller this uploading
 resize_image.options 
 - animate if true then save image gif animated else first moveclip
 - quality 10 - 100
-- optimisation: if true then resize size optimal size image else save image original tmp storage
-
-
 
 Save model then controller
 ```php

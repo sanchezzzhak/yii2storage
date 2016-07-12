@@ -7,10 +7,10 @@ class StorageAsset extends \yii\web\AssetBundle
     public $sourcePath = '@kak/storage/assets';
 
     public $css = [
-        'storage-upload.css',
+        'css/kak-storage-upload.css',
     ];
     public $js = [
-        'storage-upload.js',
+        'js/kak-storage-upload.js',
     ];
 
     public $depends = [
