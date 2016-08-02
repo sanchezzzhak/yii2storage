@@ -75,7 +75,13 @@
   a.preview {
     display: inline-block;
   }
-  .preview-box > img {}
+  .preview-box{
+    min-height: 200px;
+    /* max-height: 516px; */
+  }
+  .preview-box > img {
+    max-width: 100%;
+  }
   .hide {
     display: none;
   }

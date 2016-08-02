@@ -59,6 +59,11 @@
   clear: both; }
 .yii2upload a.preview {
   display: inline-block; }
+.yii2upload .preview-box {
+  min-height: 200px;
+  /* max-height: 516px; */ }
+.yii2upload .preview-box > img {
+  max-width: 100%; }
 .yii2upload .hide {
   display: none; }
 .yii2upload .show {

@@ -24,7 +24,7 @@
         init: function (options) {
             var self = this, $el = self.element;
 
-            self.$tmpl_upload = $el.data('tmpl-add') || 'tmpl-add';
+            self.$tmpl_upload = $el.data('tmpl-upload') || 'tmpl-upload';
             self.$tmpl_download = $el.data('tmpl-download') || 'tmpl-download';
 
             self.$click  = $el.find(this.selectors.base_class);
@@ -96,9 +96,7 @@
         initFileUpload: function(e){
             var self = this, $el = self.element;
 
-            console.log('initFileUpload');
-
-            $el.closest('form').fileupload({
+            $el.find('input[type="file"]').fileupload({
                 multiple    : $el.data('multiple') == '1' || false,
                 autoUpload  : $el.data('autoupload') == '1' || false,
                 dataType    : 'json',
@@ -108,22 +106,23 @@
                 downloadTemplateId: null,
                 progressall: function (e, data) {
                     var progress = parseInt(data.loaded / data.total * 100, 10);
-                    $(this).find('.progress .bar').css('width',progress + '%');
+                    $el.find('.progress .bar').css('width',progress + '%');
                 },
                 add:  function(e, data){
+
+                    console.log('add',$(this));
 
                     if (e.isDefaultPrevented()) {
                         return false;
                     }
                     var $this = $(this);
-                    var conteiner = $this.find('.files');
+                    var conteiner = $el.find('.files');
 
                     var odata = {
                         files: data.files,
                         autoUpload: $el.data('autoupload')
                     };
                     data.context = $(tmpl(self.$tmpl_upload, odata));
-
                     if( $el.data('singleupload') ){
                         conteiner.html(data.context);
                     }else{
@@ -137,7 +136,6 @@
                             var size = (data.files[index])?  data.files[index].size : 0;
                             if(size == 0)
                                 return false;
-
                             $(this).find('.size').text(self._formatFileSize(size));
 
                         }).removeClass('processing');
@@ -188,6 +186,7 @@
         var args = Array.apply(null, arguments);
         args.shift();
         return this.each(function () {
+
             var $this = $(this), data = $this.data('kakStorageUpload'), options = typeof option === 'object' && option;
             if (!data) {
                 data = new kakStorageUpload(this, $.extend({}, $.fn.kakStorageUpload.defaults, options, $(this).data()));

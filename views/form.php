@@ -13,6 +13,8 @@
      data-multiple="<?=(int)$context->multiple?>"
      data-crop="<?=(int)$context->crop?>"
      data-singleupload="<?=(int)$context->singleUpload?>"
+     data-tmpl-upload="<?=$context->id?>-tmpl-upload"
+     data-tmpl-download="<?=$context->id?>-tmpl-download"
      data-autoupload="<?=(int)$context->autoUpload?>">
     <div>
         <span class="btn fileinput-button">
@@ -59,7 +61,7 @@
 
 </div>
 
-<script id="tmpl-add" type="text/x-tmpl" >
+<script id="<?=$context->id?>-tmpl-upload" type="text/x-tmpl" >
     {% for (var i=0, file; file=o.files[i]; i++) { %}
     <div class="template-upload">
         <span class="preview"></span>
@@ -84,7 +86,7 @@
     </div>
     {% } %}
 </script>
-<script id="tmpl-download" type="text/x-tmpl">
+<script id="<?=$context->id?>-tmpl-download" type="text/x-tmpl">
 {% for (var i=0, file; file = o.files[i]; i++) { %}
     <div class="template-download"
       data-url="{%=file.url%}"

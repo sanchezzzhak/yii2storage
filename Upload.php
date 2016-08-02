@@ -59,10 +59,12 @@ class Upload extends Widget
         $this->url = Url::to($this->url);
         $this->options['multiple']  = ($this->multiple == true);
 
-        if(!$this->id )
-        {
+        if(!$this->id ) {
             $class = explode('\\',get_class($this->model));
             $this->id = array_pop($class). '-form';
+        }
+        if(!isset($this->options['id'])) {
+            $this->options['id'] = $this->id . '-upload-btn';
         }
 	}
 
@@ -85,7 +87,7 @@ class Upload extends Widget
         $id   = $this->id;
         $view = $this->getView();
         $js = "jQuery('#$id').kakStorageUpload({})";
-        $view->registerJs($js,$view::POS_READY, 'kak-storage-upload');
+        $view->registerJs($js,$view::POS_READY, $id . ':kak-storage-upload ');
 
 		return $this->render($this->view ,[
 			'model'       => $this->model,
