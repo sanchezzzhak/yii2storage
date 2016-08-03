@@ -35,8 +35,7 @@ class UploadAction extends BaseUploadAction
     {
         parent::init();
 
-        if( !isset($this->form_model))
-        {
+        if( !isset($this->form_model)) {
             $this->form_model = Yii::createObject(['class'=>$this->form_name ] );
         }
     }
@@ -60,23 +59,22 @@ class UploadAction extends BaseUploadAction
         header('Vary: Accept');
         if (Yii::$app->request->isAjax && isset($_SERVER['HTTP_ACCEPT']) && (strpos($_SERVER['HTTP_ACCEPT'], 'application/json') !== false)) {
             header('Content-type: application/json');
-        } else {
-            header('Content-type: text/plain');
+            return;
         }
+        header('Content-type: text/plain');
     }
+
 
     /**
      * @return string|null
      */
     protected function handleUploading()
     {
-        $result = [];
         /** @var $model \kak\storage\models\UploadForm */
         $method  = Yii::$app->request->get('_method');
 
         $model = $this->form_model;
-        if(!$file = UploadedFile::getInstance($model,'file'))
-        {
+        if(!$file = UploadedFile::getInstance($model,'file')) {
             return null;
         }
 
@@ -104,8 +102,7 @@ class UploadAction extends BaseUploadAction
             }
         }
 
-        if(!count($model->errors))
-        {
+        if(!count($model->errors)) {
             $extMimeType = count($extList) ? end($extList): null;
 
             $ext = $this->getExtension($model->file);
@@ -119,12 +116,10 @@ class UploadAction extends BaseUploadAction
             $pathFile = $adapter->uniqueFilePath($ext);
             $model->file = $adapter->getUrl($pathFile);
 
-            if(!count($model->getErrors()) && $file->error == 0 && $file->saveAs($pathFile))
-            {
+            if(!count($model->getErrors()) && $file->error == 0 && $file->saveAs($pathFile)) {
                 chmod($pathFile , 0666);
                 $returnValue = $this->beforeReturn();
-                if ($returnValue === true)
-                {
+                if ($returnValue === true) {
                     $this->_result = [
                         "name_display" => $file->name,
                         "type"         => $model->mime_type,
@@ -137,12 +132,16 @@ class UploadAction extends BaseUploadAction
                     $this->_image($model->file);
                 }
             }
-        }
-        else
-        {
+
+        } else {
             $this->_result['errors'] =  $model->getErrors();
         }
 
+        return  $this->response();
+    }
+
+    private function response()
+    {
         return  Json::encode($this->_result);
     }
 

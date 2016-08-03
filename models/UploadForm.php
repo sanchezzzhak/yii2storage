@@ -1,7 +1,6 @@
 <?php
 
 namespace kak\storage\models;
-use kak\storage\actions\UploadAction;
 use kak\storage\Storage;
 use \yii\base\Model;
 use yii\helpers\ArrayHelper;
@@ -12,10 +11,11 @@ class UploadForm extends Model
     public $file;
     public $mime_type;
     public $size;
-    public $name;
     public $filename;
+    public $name;
 
-    public $meta = '';  // import
+    public $meta = '';
+    public $mata_name = 'meta';
 
 
     private $_newValue = false;
@@ -52,13 +52,14 @@ class UploadForm extends Model
         $storageSource = new Storage($storageIn);
         $storageRemote = new Storage($storageTo);
         $adapterTmp = $storageSource->getAdapter();
-        $arrMeta =  \Yii::$app->request->post('meta',[]);
+
+        $arrMeta =  \Yii::$app->request->post($this->mata_name,[]);
         $result = [];
         if(count($arrMeta)) {
+
             foreach($arrMeta as $meta) {
 
                 $data = Json::decode($meta);
-
                 $url = ArrayHelper::getValue($data,'url',false);
                 $storageId = ArrayHelper::getValue($data,'storage');
 

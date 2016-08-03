@@ -6,6 +6,7 @@
     /** @var $model \kak\storage\models\UploadForm */
     $context = $this->context;
     $arrMeta = \yii\helpers\Json::decode($model->meta);
+    $mataName = $model->meta_name
 ?>
 
 <div class="yii2upload kak-storage-upload" id="<?=$context->id?>"
@@ -37,17 +38,15 @@
                     <div class="act">
                         <a class="cancel btn inline" href="javascript:;"><?=$context->labelDelete?></a>
                     </div>
-                    <?= Html::hiddenInput('meta[]', \yii\helpers\Json::encode($meta), ['class'=>'meta'])?>
+                    <?= Html::hiddenInput($mataName.'[]', \yii\helpers\Json::encode($meta), ['class'=>'meta'])?>
                     <?php if(count($meta['images'])):?>
                         <span>
                             <a class="preview" href="javascript:;"><img src="<?=ArrayHelper::getValue($meta['images'],'thumbnail.url')?>"></a>
                             <div class="preview-box hide">
                                 <div class="act">
-
                                     <?php if($context->crop): ?>
                                         <a href="javascript:;" class="crop btn inline"> <?=$context->labelCrop;?></a>
                                     <?php endif;?>
-
                                     <a href="javascript:;" class="crop-cancel btn inline"> <?=$context->labelCancel?></a>
                                 </div>
                                 <img src="<?=ArrayHelper::getValue($meta['images'],'preview.url')?>">
@@ -103,7 +102,7 @@
         <div class="act">
             <a class="cancel btn inline" href="javascript:;"><?=$context->labelDelete?></a>
         </div>
-        <?= Html::hiddenInput('meta[]', '', ['class'=>'meta'])?>
+        <?= Html::hiddenInput($mataName.'[]', '', ['class'=>'meta'])?>
         {% if(o.result.images.thumbnail) { %}
             <span>
                 <a class="preview" href="javascript:;"><img src="{%=o.result.images.thumbnail.url%}"></a>
