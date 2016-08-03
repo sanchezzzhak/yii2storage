@@ -93,7 +93,7 @@ Save model then controller
     public function actionUpdate($id)
     {
         $model = $this->findPostById($id);
-        $uploadForm = new \kak\storage\models\UploadForm;
+        $uploadForm = new \kak\storage\models\UploadForm(['meta_name' => 'image_base']);
         $uploadForm->meta = $postModel->images_json;
 
         if($this->savePostForm($model, $uploadForm)) {
