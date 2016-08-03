@@ -15,7 +15,7 @@ class UploadForm extends Model
     public $name;
 
     public $meta = '';
-    public $mata_name = 'meta';
+    public $meta_name = 'meta';
 
 
     private $_newValue = false;
@@ -53,7 +53,7 @@ class UploadForm extends Model
         $storageRemote = new Storage($storageTo);
         $adapterTmp = $storageSource->getAdapter();
 
-        $arrMeta =  \Yii::$app->request->post($this->mata_name,[]);
+        $arrMeta =  \Yii::$app->request->post($this->meta_name,[]);
         $result = [];
         if(count($arrMeta)) {
 
