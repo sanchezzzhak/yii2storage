@@ -38,10 +38,10 @@
             var self = this, $el = self.element;
             $el.triggerHandler('destroy',this);
 
-            $(document).off('click',self.selectors.base_class + ' a.preview');
-            $(document).off('click',self.selectors.base_class + ' .crop');
-            $(document).off('click',self.selectors.base_class + ' .crop-cancel');
-
+            $el.off('click','a.preview');
+            $el.off('click','.crop');
+            $el.off('click','.crop-cancel');
+            $el.off('click','.cancel');
         },
         create: function(){
             var self = this, $el = self.element;
@@ -52,23 +52,26 @@
             this.initPreviewHandle();
 
         },
-
         initCropHandle: function(){
             var self = this, $el = self.element;
 
-            $(document).on('click',self.selectors.base_class + ' .crop' ,function(e){
+            $el.on('click','.cancel' ,function(e){
+                $(this).closest(self.selectors.item_download).remove();
+                return false;
+            });
 
+            $el.on('click','.crop' ,function(e){
                 $(this).closest(self.selectors.item_download).find('.preview-box > img').off().cropper({
                     autoCropArea: 0.6,
                     zoomable: false
                 }).on('resize.cropper, built.cropper', function(){
                     $(this).closest(self.selectors.item_download).find('.cropper-container').css('top',0).css('left',0);
                 });
-
                 return false;
             });
-            $(document).on('click',self.selectors.base_class  + ' .crop-cancel',function() {
 
+            $el.on('click','.crop-cancel',function() {
+                console.log('cancel click');
                 var box = $(this).closest(self.selectors.item_download).find('.preview-box');
                 if($el.data('crop') && box.find('.cropper-container').length > 0  ) {
                     $(this).closest(self.selectors.item_download).find('.preview-box > img').cropper("destroy");
@@ -82,11 +85,7 @@
         },
         initPreviewHandle: function(){
             var self = this, $el = self.element;
-            console.log(self.selectors.base_class);
-            $(document).on('click',self.selectors.base_class + ' a.preview' ,function(e){
-
-                console.log('click preview');
-
+            $el.on('click','.preview' ,function(e){
                 $(this).hide();
                 $(this).closest(self.selectors.item_download).find('.preview-box').removeClass('hide').addClass('show');
                 return false;
