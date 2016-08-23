@@ -135,3 +135,22 @@ Once the extension is installed, simply use it in your code by:
 <hr>
 ```
 if arg name resize_type in GET only these types will be saved resize images
+
+usage pjax
+==========
+
+register assets the main layouts  
+```php
+StorageAsset::register($view);
+```
+pjax event add code
+```js
+    $(document).on('pjax:end','.pjax-wrapper',function(e){
+        //init old gui
+        $('.kak-storage-upload').kakStorageUpload({});
+    });
+```
+
+        
+        
+

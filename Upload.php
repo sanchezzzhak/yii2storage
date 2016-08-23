@@ -75,7 +75,6 @@ class Upload extends Widget
     {
         $view = $this->getView();
         CropperAsset::register($view);
-        FileUploadAsset::register($view);
         StorageAsset::register($view);
     }
     /**

@@ -15,5 +15,6 @@ class StorageAsset extends \yii\web\AssetBundle
 
     public $depends = [
         'yii\jui\JuiAsset',
+        'kak\storage\FileUploadAsset',
     ];
 }
