@@ -151,6 +151,8 @@ pjax event add code
     });
 ```
 
-        
-        
-
+roadmap
+==========
+2018: 
+Q1 add storage google cloud, change `guzzle http` to `yii2-http-client`, change aws-sdk-php
+Q2 create new uploader widget + tests
