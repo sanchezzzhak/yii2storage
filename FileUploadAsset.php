@@ -3,7 +3,7 @@ namespace kak\storage;
 
 class FileUploadAsset extends \yii\web\AssetBundle
 {
-	public $sourcePath = '@vendor/bower/blueimp-file-upload';
+	public $sourcePath = '@bower/blueimp-file-upload';
 
 	public $js = [
 		'js/vendor/jquery.ui.widget.js',
