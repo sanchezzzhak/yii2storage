@@ -1,9 +1,9 @@
 <?php
-namespace kak\storage;
+namespace kak\storage\bundles;
 
 class FileUploadAsset extends \yii\web\AssetBundle
 {
-	public $sourcePath = '@vendor/bower/blueimp-file-upload';
+	public $sourcePath = '@bower/blueimp-file-upload';
 
 	public $js = [
 		'js/vendor/jquery.ui.widget.js',
@@ -16,6 +16,6 @@ class FileUploadAsset extends \yii\web\AssetBundle
 
 	public $depends = [
 		'yii\jui\JuiAsset',
-		'kak\storage\TmplAsset',
+		'kak\storage\bundles\TmplAsset',
 	];
 }

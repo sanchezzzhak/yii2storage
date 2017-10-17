@@ -53,7 +53,7 @@ class BaseAdapter extends Component
     public function save($source, $options = [])
     {
         $event = new Event;
-        $this->trigger(BaseAdapter::EVENT_SAVE , $event);
+        $this->trigger(BaseAdapter::EVENT_SAVE, $event);
     }
 
     /**
@@ -63,22 +63,23 @@ class BaseAdapter extends Component
     public function copy($sourceKey, $targetKey, $options = [])
 	{
         $event = new Event;
-        $this->trigger(BaseAdapter::EVENT_COPY , $event);
+        $this->trigger(BaseAdapter::EVENT_COPY, $event);
 	}
 
     public function delete($name)
     {
         $event = new Event;
-        $this->trigger(BaseAdapter::EVENT_DELETE , $event);
+        $this->trigger(BaseAdapter::EVENT_DELETE, $event);
     }
 
     public function rename($sourceKey, $targetKey)
     {
         $event = new Event;
-        $this->trigger(BaseAdapter::EVENT_RENAME , $event);
+        $this->trigger(BaseAdapter::EVENT_RENAME, $event);
     }
 
-    public function uniqueFilePath($ext = null){
+    public function uniqueFilePath($ext = null)
+    {
         $event = new Event;
         $this->trigger(BaseAdapter::EVENT_UNIQUE_FILE_PATH , $event);
     }
@@ -89,10 +90,9 @@ class BaseAdapter extends Component
      */
     public function generateName($type = null)
     {
-        switch($type)
-        {
+        switch($type) {
             case BaseAdapter::GENERATE_SHA1:
-                return sha1(Yii::$app->user->id.microtime());
+                return sha1(Yii::$app->user->id . microtime());
             case BaseAdapter::GENERATE_SYSTEM:
             default:
                 return Yii::$app->security->generateRandomKey();

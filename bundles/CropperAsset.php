@@ -1,5 +1,5 @@
 <?php
-namespace kak\storage;
+namespace kak\storage\bundles;
 
 class CropperAsset extends \yii\web\AssetBundle
 {

@@ -1,5 +1,5 @@
 <?php
-namespace kak\storage;
+namespace kak\storage\bundles;
 
 
 class StorageAsset extends \yii\web\AssetBundle
@@ -15,6 +15,6 @@ class StorageAsset extends \yii\web\AssetBundle
 
     public $depends = [
         'yii\jui\JuiAsset',
-        'kak\storage\FileUploadAsset',
+        'kak\storage\bundles\FileUploadAsset',
     ];
 }

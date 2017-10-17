@@ -1,5 +1,5 @@
 <?php
-namespace kak\storage;
+namespace kak\storage\bundles;
 
 use yii\web\AssetBundle;
 

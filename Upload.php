@@ -74,8 +74,8 @@ class Upload extends Widget
     protected function registerAssets()
     {
         $view = $this->getView();
-        CropperAsset::register($view);
-        StorageAsset::register($view);
+        bundles\CropperAsset::register($view);
+        bundles\StorageAsset::register($view);
     }
     /**
      * Run widget
