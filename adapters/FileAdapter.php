@@ -1,9 +1,11 @@
 <?php
 
 namespace kak\storage\adapters;
+
 use Yii;
 use yii\base\Exception;
 use yii\helpers\ArrayHelper;
+use yii\helpers\FileHelper;
 
 class FileAdapter extends BaseAdapter implements AdapterInterface
 {
@@ -11,7 +13,7 @@ class FileAdapter extends BaseAdapter implements AdapterInterface
     const MOVE_COPY = 0;
 
     private $_basePath = '@webroot/storage';
-    private $_baseUrl  = '@web/storage';
+    private $_baseUrl = '@web/storage';
 
     /**
      * Returns the upload directory path
@@ -37,11 +39,10 @@ class FileAdapter extends BaseAdapter implements AdapterInterface
      */
     public function getAbsolutePath($name)
     {
-        $name = str_replace($this->getBasePath() . "/" . $this->id ,'', $name);
-        $name = str_replace($this->getBaseUrl()  . "/" . $this->id ,'', $name);
-        return $this->getBasePath() . "/" . $this->id . "/" . trim($name,'/\\');
+        $name = str_replace($this->getBasePath() . "/" . $this->id, '', $name);
+        $name = str_replace($this->getBaseUrl() . "/" . $this->id, '', $name);
+        return $this->getBasePath() . "/" . $this->id . "/" . trim($name, '/\\');
     }
-
 
 
     /**
@@ -52,6 +53,7 @@ class FileAdapter extends BaseAdapter implements AdapterInterface
     {
         return Yii::getAlias('@web/storage');
     }
+
     /**
      * Sets the base url
      * @param string $value the url pointing to the directory where to get the files
@@ -68,8 +70,8 @@ class FileAdapter extends BaseAdapter implements AdapterInterface
      */
     public function getUrl($name, $options = [])
     {
-        $name = str_replace($this->getBasePath() . "/" . $this->id ,'',  $name );
-        return $this->getBaseUrl() . "/" . $this->id . "/" . trim($name,'/\\');
+        $name = str_replace($this->getBasePath() . "/" . $this->id, '', $name);
+        return $this->getBaseUrl() . "/" . $this->id . "/" . trim($name, '/\\');
     }
 
     /**
@@ -79,24 +81,23 @@ class FileAdapter extends BaseAdapter implements AdapterInterface
      */
     public function uniqueFilePath($ext = null)
     {
-        $filename = $this->generateName(FileAdapter::GENERATE_SHA1) . (!empty($ext) ? '.' . $ext: '');
+        $filename = $this->generateName(FileAdapter::GENERATE_SHA1) . (!empty($ext) ? '.' . $ext : '');
 
         $filedir = $this->getBasePath() . "/" . $this->id;
 
-        for ($i = 0; $i < $this->level; $i++)
-        {
-            if (!file_exists($filedir))
-            {
+        FileHelper::createDirectory($filedir);
+
+
+        for ($i = 0; $i < $this->level; $i++) {
+            if (!file_exists($filedir)) {
                 $message = Yii::t('yii', 'Directory not exists: {filedir}', array('filedir' => $filedir));
                 throw new Exception($message);
             }
-            if (!is_dir($filedir))
-            {
+            if (!is_dir($filedir)) {
                 $message = Yii::t('yii', 'Not directory: {filedir}', array('filedir' => $filedir));
                 throw new Exception($message);
             }
-            if (!is_writable($filedir))
-            {
+            if (!is_writable($filedir)) {
                 $message = Yii::t('yii', 'Not writable directory: {filedir}', array('filedir' => $filedir));
                 throw new Exception($message);
             }
@@ -106,8 +107,7 @@ class FileAdapter extends BaseAdapter implements AdapterInterface
 
         $filepath = $filedir . "/" . $filename;
 
-        if (file_exists($filepath))
-        {
+        if (file_exists($filepath)) {
             $filepath = $this->uniqueFilePath($ext);
         }
         return $filepath;
@@ -121,17 +121,17 @@ class FileAdapter extends BaseAdapter implements AdapterInterface
      */
     public function save($source, $options = [])
     {
-        $ext = pathinfo($source,PATHINFO_EXTENSION);
+        $ext = pathinfo($source, PATHINFO_EXTENSION);
         $storage_filepath = $this->uniqueFilePath($ext);
 
         @copy($source, $storage_filepath);
         @chmod($storage_filepath, 0666);
 
-        $delete_after = ArrayHelper::getValue($options,'delete_after',FileAdapter::MOVE_MODE);
+        $delete_after = ArrayHelper::getValue($options, 'delete_after', FileAdapter::MOVE_MODE);
         if ($delete_after === FileAdapter::MOVE_MODE)
             @unlink($source);
 
-        parent::save($source,$options);
+        parent::save($source, $options);
         return $storage_filepath;
     }
 

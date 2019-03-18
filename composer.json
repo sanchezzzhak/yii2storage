@@ -17,7 +17,7 @@
 		"yiisoft/yii2": "*",
 		"yiisoft/yii2-jui": "*",
         "yiisoft/yii2-imagine": "*",
-        "bower-asset/blueimp-file-upload": "9.10.5",
+        "bower-asset/blueimp-file-upload": ">=9.28",
         "bower-asset/cropper": "0.10.1"
 	},
     "extra": {

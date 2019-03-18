@@ -71,22 +71,6 @@
 
 .kak-upload-dashboard-wgt {
   position: relative; }
-  .kak-upload-dashboard-wgt .wgt-btn {
-    display: inline-block;
-    vertical-align: bottom;
-    cursor: pointer;
-    font-family: inherit;
-    font-size: inherit;
-    line-height: 1;
-    color: inherit;
-    border: none;
-    background: transparent; }
-  .kak-upload-dashboard-wgt .wgt-template-actions {
-    font-size: 11px;
-    line-height: 11px;
-    font-weight: 400;
-    color: #6d6d6d;
-    margin-bottom: 4px; }
   .kak-upload-dashboard-wgt .wgt-wrap-content {
     position: relative;
     background: #f5f5f5;
@@ -154,17 +138,6 @@
       line-height: 1;
       width: 20px;
       height: 20px; }
-  .kak-upload-dashboard-wgt .template-upload, .kak-upload-dashboard-wgt .template-download {
-    display: inline-block;
-    width: 100%;
-    margin-bottom: 10px; }
-  .kak-upload-dashboard-wgt .preview {
-    width: 50px;
-    height: 50px;
-    display: block;
-    background-size: cover;
-    float: left;
-    margin-right: 10px; }
   .kak-upload-dashboard-wgt .wgt-adapters-plugin {
     z-index: -1;
     background-color: #fafafa;
@@ -215,6 +188,15 @@
     .kak-upload-dashboard-wgt .wgt-device-upload-plugin .fileinput-button {
       padding: 9px;
       position: relative;
+      display: block; }
+    .kak-upload-dashboard-wgt .wgt-device-upload-plugin .template-upload .preview {
+      width: 50px;
+      height: 50px;
+      display: block;
+      background-size: cover;
+      float: left;
+      margin-right: 10px; }
+    .kak-upload-dashboard-wgt .wgt-device-upload-plugin .template-upload .name {
       display: block; }
 
 /*# sourceMappingURL=kak-storage-upload.css.map */

@@ -15,7 +15,7 @@ use yii\helpers\FileHelper;
 use yii\helpers\Json;
 use yii\web\UploadedFile;
 use yii\web\HttpException;
-use kak\storage\Storage;
+use \kak\storage\Storage;
 
 /**
  * Class UploadAction
@@ -74,7 +74,7 @@ class UploadAction extends BaseUploadAction
         $method  = Yii::$app->request->get('_method');
 
         $model = $this->form_model;
-        if(!$file = UploadedFile::getInstance($model,'file')) {
+        if(!$file = UploadedFile::getInstanceByName('file')) {
             return null;
         }
 

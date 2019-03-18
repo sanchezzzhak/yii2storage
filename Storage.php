@@ -20,22 +20,21 @@ use yii\log\Logger;
 
 /**
  * Config for Storage
-
-'storage' => [
-
-    'storages' => [
-        'photo'  => [
-            'level' => 3,
-        ],
-        'file' => [
-            'level' => 3,
-        ],
-        'tmp'  => [
-         'level' => 0,
-        ],
-    ],
-],
-
+ *
+ * 'storage' => [
+ *
+ * 'storages' => [
+ * 'photo'  => [
+ * 'level' => 3,
+ * ],
+ * 'file' => [
+ * 'level' => 3,
+ * ],
+ * 'tmp'  => [
+ * 'level' => 0,
+ * ],
+ * ],
+ * ],
  */
 
 /***
@@ -45,35 +44,34 @@ use yii\log\Logger;
 class Storage extends Component
 {
     const TYPE_STORAGE_AMAZON = 'amazon';
-    const TYPE_STORAGE_FILE   = 'file';
-    const TYPE_STORAGE_SCP    = 'scp';
+    const TYPE_STORAGE_FILE = 'file';
+    const TYPE_STORAGE_SCP = 'scp';
 
     private $_apapter;
     private $_type;
 
 
-    public  $id;
-    public  $storages;
-
+    public $id;
+    public $storages;
 
 
     public function __construct($id, $config = [])
     {
-
-        if(!count($config) && !$config = ArrayHelper::getValue(Yii::$app->params,'storage'))
-        {
-            throw new Exception(Yii::t('yii', 'Storages not init config'));
+        if (!count($config)) {
+            $config = ArrayHelper::getValue(Yii::$app->params, 'storage');
+            if(!$config) {
+                throw new Exception(Yii::t('yii', 'Storages not init config'));
+            }
         }
         parent::__construct($config);
-        $this->_type = ArrayHelper::remove($this->storages[$id],'type',Storage::TYPE_STORAGE_FILE);
 
-        if (!is_string($id))
-        {
+        $this->_type = ArrayHelper::remove($this->storages[$id], 'type', Storage::TYPE_STORAGE_FILE);
+
+        if (!is_string($id)) {
             throw new Exception(Yii::t('yii', 'Storage ID must be string.'));
         }
 
-        if (!isset($this->storages[$id]))
-        {
+        if (!isset($this->storages[$id])) {
             $message = Yii::t('yii', 'Storage ID={id} not exist.', ['id' => $id]);
             throw new Exception($message);
         }
@@ -105,22 +103,20 @@ class Storage extends Component
      */
     public function getAdapter()
     {
-        if($this->_apapter == null)
-        {
+        if ($this->_apapter == null) {
             $config = $this->getStorageConfigById($this->id);
             $config['id'] = $this->id;
 
-            switch($this->_type)
-            {
+            switch ($this->_type) {
                 case Storage::TYPE_STORAGE_AMAZON:
-                    $this->_apapter = new \kak\storage\adapters\AmazonAdapter($config);
+                    $this->_apapter = new adapters\AmazonAdapter($config);
                     break;
                 case Storage::TYPE_STORAGE_FILE:
-                    $this->_apapter = new \kak\storage\adapters\FileAdapter($config);
+                    $this->_apapter = new adapters\FileAdapter($config);
                     break;
-				case Storage::TYPE_STORAGE_SCP:
-					$this->_apapter = new \kak\storage\adapters\ScpAdapter($config);
-					break;
+                case Storage::TYPE_STORAGE_SCP:
+                    $this->_apapter = new adapters\ScpAdapter($config);
+                    break;
 
             }
         }
@@ -129,7 +125,7 @@ class Storage extends Component
 
     public function save($source, $options)
     {
-        return $this->getAdapter()->save($source,$options);
+        return $this->getAdapter()->save($source, $options);
     }
 
     /**

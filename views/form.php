@@ -60,7 +60,7 @@
 
 </div>
 
-<script id="<?=$context->id?>-tmpl-upload" type="text/x-tmpl" >
+<script id="<?= $context->id ?>-tmpl-upload" type="text/x-tmpl">
     {% for (var i=0, file; file=o.files[i]; i++) { %}
     <div class="template-upload">
         <span class="preview"></span>

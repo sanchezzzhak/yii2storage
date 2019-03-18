@@ -99,7 +99,7 @@
                 multiple    : $el.data('multiple') == '1' || false,
                 autoUpload  : $el.data('autoupload') == '1' || false,
                 dataType    : 'json',
-                singleFileUploads: true,
+                singleFileUploads: false,
                 url : $el.data('url'),
                 uploadTemplateId: null,
                 downloadTemplateId: null,
@@ -108,9 +108,6 @@
                     $el.find('.progress .bar').css('width',progress + '%');
                 },
                 add:  function(e, data){
-
-                    console.log('add',$(this));
-
                     if (e.isDefaultPrevented()) {
                         return false;
                     }
@@ -121,13 +118,14 @@
                         files: data.files,
                         autoUpload: $el.data('autoupload')
                     };
+                    
                     data.context = $(tmpl(self.$tmpl_upload, odata));
                     if( $el.data('singleupload') ){
                         conteiner.html(data.context);
                     }else{
                         data.context.appendTo(conteiner);
                     }
-
+                    
                     data.process(function () {
                         return $this.fileupload('process', data);
                     }).always(function () {
