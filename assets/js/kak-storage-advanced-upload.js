@@ -3,7 +3,8 @@
   
   var TYPES = {
 	ADAPTER: 'adapter',
-	VIEW_FILES: 'view-files'
+	VIEW_FILES: 'view-files',
+	FILE: 'file'
   };
   
   var SELECTORS = {
@@ -61,6 +62,26 @@
 	  this.el = $(target);
 	  this.render({});
 	},
+	
+	hidePlugin: function(){
+	  if(this.el !== undefined && this.block !== undefined){
+		return this.el.find('.' +  this.block).hide();
+	  }
+	},
+ 
+	showPlugin: function(){
+	  if(this.el !== undefined && this.block !== undefined){
+		return this.el.find('.' +  this.block).show();
+	  }
+	},
+	
+	getPluginContainer: function(){
+	  if(this.el === undefined || this.block === undefined){
+	    return null;
+	  }
+	  return this.el.find('.' +  this.block);
+	},
+	
 	render: function (state) {
 	  throw (new Error('Extend the render method to add your plugin to a DOM element'));
 	}
@@ -122,10 +143,7 @@
 	  }
 	},
 	hideAllAdapters: function () {
-	  for (var i = 0, l = this.app.plugins[TYPES.ADAPTER].length; i < l; i++) {
-		var plugin = this.app.plugins[TYPES.ADAPTER][i];
-		this.el.find('.' + plugin.block).hide();
-	  }
+	  this.app.hidePluginsByType(TYPES.ADAPTER);
 	},
 	onShowPlugin: function (e) {
 	  var el = $(e.currentTarget);
@@ -153,6 +171,128 @@
   };
   
   // ==========================================
+  // CROP IMAGE PLUGIN
+  // ==========================================
+  
+  
+  function CropImagePlugin(app, options){
+	var defaultOpts = {
+	  template: null,
+	  isHidden: true,
+	  endPointUrl: 'upload?act=crop',
+	  
+	  // crop settings
+	  autoCropArea: 0.6,
+	  zoomable: true
+	};
+ 
+	options = $.extend(defaultOpts, options);
+	Plugin.call(this, app, options);
+	inherits(CropImagePlugin, Plugin);
+ 
+	this.id = this.options.id || 'CropImage';
+	this.type = TYPES.FILE;
+	this.block = 'wgt-crop-image-plugin';
+  }
+  
+  CropImagePlugin.prototype = {
+  
+	init: function () {
+	  var wrap = this.getPluginContainer();
+	
+	  wrap.off('click', '.crop-cancel')
+	  .on('click', '.crop-cancel', $.proxy(this.cropCancel, this));
+	  
+	  wrap.off('click', '.crop-me')
+	  .on('click', '.crop-me', $.proxy(this.cropSave, this));
+	  
+	},
+	
+	install: function () {
+	  var target = this.options.target;
+	  this.mount(target, this);
+	  this.init();
+	},
+	
+	cropSave: function(e){
+	
+	},
+	
+  	cropCancel: function(e){
+      this.hidePlugin();
+	},
+	
+	showCrop: function(id, result){
+	  this.app.hidePluginsByType(TYPES.FILE);
+	  this.app.hidePluginsByType(TYPES.VIEW_FILES);
+	  this.app.hidePluginsByType(TYPES.ADAPTER);
+	  
+	  var container = this.getPluginContainer();
+	  if (!container) {
+		return;
+	  }
+	  this.showPlugin();
+	  var image = $('<img>', {src: result.url });
+	  
+	  var wrap = container
+	  .find('.cropper-container')
+	  .css('top', 0)
+	  .css('left', 0)
+	  .empty();
+	  
+	  wrap.append(image);
+	  
+	  wrap.find('img').off().cropper({
+		autoCropArea: this.options.autoCropArea,
+		zoomable: this.options.zoomable,
+	  });
+	  
+	  console.log('show crop', id, result);
+	  
+	  /*
+	  	/*
+		  $(this).closest(self.selectors.item_download).find('.preview-box > img').off().cropper({
+			  autoCropArea: 0.6,
+			  zoomable: false
+		  }).on('resize.cropper, built.cropper', function(){
+		  $(this).closest(self.selectors.item_download).find('.cropper-container').css('top',0).css('left',0);
+	
+	 	*/
+	  
+	},
+	
+	render(stage) {
+	  if (this.options.template === null) {
+		this.options.template = `
+			<div class="cropper-container">
+		
+			</div>
+			<div class="cropper-footer">
+				<button class="wgt-btn crop-me">crop save</button>
+				<button class="wgt-btn crop-cancel">cancel</button>
+			</div>
+		`;
+	  }
+	  
+	  var plugin = $('<div>', {class: this.block});
+	  if (this.options.isHidden) {
+		plugin.hide();
+	  }
+	  var compileTmpl = tmpl(this.options.template, {});
+	  plugin.append(compileTmpl);
+	  this.el.find('.wgt-wrap-content').append(plugin);
+	  
+	}
+  };
+  
+  // ==========================================
+  // EDIT FILE PLUGIN
+  // ==========================================
+  
+  function EditFilePlugin(app, options){}
+  
+  
+  // ==========================================
   // VIEW FILES PLUGIN
   // ==========================================
   
@@ -161,7 +301,9 @@
 	  template: null,
 	  downloadItemTemplate: null,
 	  labelDelete: 'Delete',
-	  labelEdit: 'Edit'
+	  labelEdit: 'Edit',
+	  labelCrop: 'Crop',
+	  inputName: 'meta[]'
 	};
 	options = $.extend(defaultOpts, options);
 	Plugin.call(this, app, options);
@@ -175,12 +317,16 @@
   ViewFilesPlugin.prototype = {
     init: function(){
   
-	  this.el.find('.' + this.block).find('.files')
-	  .off('click', '.delete')
-	  .on('click', '.delete', $.proxy(this.removeFile, this))
+	  var selector = this.el.find('.' + this.block).find('.files');
+	  
+	  selector.off('click', '.delete')
+	  .on('click', '.delete', $.proxy(this.removeFile, this));
 	
-	  .off('click', '.edit')
-	  .on('click', '.edit', $.proxy(this.editFile, this))
+	  selector.off('click', '.edit')
+	  .on('click', '.edit', $.proxy(this.editFile, this));
+	  
+	  selector.off('click', '.crop')
+	  .on('click', '.crop', $.proxy(this.cropImageFile, this));
 	  
 	  
 	},
@@ -189,14 +335,49 @@
 	  this.mount(target, this);
 	  this.init();
 	},
+ 
+	cropImageFile: function(e){
+	  var el = $(e.currentTarget).closest('.template-download');
+	  var tid = el.attr('data-tid');
+	  var raw = el.find('input[name="' + this.options.inputName +'"]').val();
+	  
+	  console.log('raw', raw);
+	  console.log('el', el);
+	  
+	  
+	  
+	  var plugin = this.app.getPlugin('CropImage');
+	  plugin.showCrop(tid, JSON.parse(raw));
+	},
 	
 	addFile: function (result) {
-	  var compileTmpl = tmpl(this.options.downloadItemTemplate, {
+      
+      var tid = (new Date).getTime();
+	  var compileTmpl = $(tmpl(this.options.downloadItemTemplate, {
+	    tid: tid,
 	    file: result,
 		sizeFormat: formatFileSize(result.size),
 		labelDelete: this.options.labelDelete,
-		labelEdit: this.options.labelEdit
-	  });
+		labelEdit: this.options.labelEdit,
+		inputName: this.options.inputName
+	  }));
+	  
+	  compileTmpl.find('input[name="' + this.options.inputName + '"]')
+	  .val(JSON.stringify(result));
+	  
+	  
+	  if(result.images !==undefined && result.images.thumbnail !==undefined){
+		compileTmpl.find('.preview').css("background-image", 'url(' + result.images.thumbnail.url + ')');
+		
+		// is enable plugin crop
+		var cropPlugin = this.app.getPlugin('CropImage');
+		if(cropPlugin){
+		  var btn = $('<button>', {class: 'wgt-btn crop'}).text(this.options.labelCrop);
+		  compileTmpl.find('.wgt-template-actions').append(btn)
+		}
+		
+	  }
+	  
 	  this.el.find('.' + this.block).find('.files').append(compileTmpl);
 	},
 	
@@ -245,9 +426,8 @@
 	  if (this.options.downloadItemTemplate === null) {
 	  
 		this.options.downloadItemTemplate = `
-		  <div class="template-download"
-				data-url="{%= o.file.url %}"
-				data-storage="{%= o.file.storage %}">
+		  <div class="template-download" data-tid="{%= o.tid %}">
+			<input type="hidden" name="{%= o.inputName %}" value="">
 		
 		    <span class="preview"></span>
 		    
@@ -256,13 +436,8 @@
 			 <p class="size">{%= o.sizeFormat %}</p>
 			 
 			  <div class="wgt-template-actions">
-			  	  <button class="wgt-btn delete">
-			  	  	{%= o.labelDelete %}
-				  </button>
-				  
-			  	  <button class="wgt-btn edit">
-			  		{%= o.labelEdit %}
-				  </button>
+			  	  <button class="wgt-btn delete">{%= o.labelDelete %}</button>
+			  	  <button class="wgt-btn edit">{%= o.labelEdit %}</button>
 			  </div>
 			</div>
 		
@@ -358,7 +533,7 @@
 	  labelDelete: 'Delete',
 	  labelProcessingUpload: 'Processing',
 	  
-	  fileName: 'file'
+	  fileName: 'file[]'
 	};
 	
 	options = $.extend(defaultOpts, options);
@@ -423,17 +598,7 @@
 		autoUpload: this.options.autoUpload,
 		url: this.options.endPointUrl,
 		uploadTemplateId: null,
-		downloadTemplateId: null,
-	 
-		//disableImageResize: true,
-		previewMaxWidth: 100,
-		previewMaxHeight: 100,
-		previewCrop: true,
-		
-		imageMaxWidth: 800,
-		imageMaxHeight: 800,
-		imageCrop: true
-		
+		downloadTemplateId: null
 	  });
 	  
 	  
@@ -612,6 +777,13 @@
 	  return this;
 	},
 	
+	hidePluginsByType: function(id){
+	  for (var i = 0, l = this.plugins[id].length; i < l; i++) {
+		var plugin = this.plugins[id][i];
+		this.element.find('.' + plugin.block).hide();
+	  }
+	},
+	
 	getPlugin: function (pluginId) {
 	  for (var group in this.plugins) {
 		for (var i = 0, l = this.plugins[group].length; i < l; i++) {
@@ -638,6 +810,9 @@
 		
 		data.use(LinkUploadPlugin, {
 		  endPointUrl: '/group/default/upload'
+		});
+		data.use(CropImagePlugin, {
+		  endPointUrl: '/group/default/upload?act=crop'
 		});
 		data.use(DeviceUploadPlugin, {
 		  endPointUrl: '/group/default/upload'

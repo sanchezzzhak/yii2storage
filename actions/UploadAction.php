@@ -74,9 +74,18 @@ class UploadAction extends BaseUploadAction
         $method  = Yii::$app->request->get('_method');
 
         $model = $this->form_model;
-        if(!$file = UploadedFile::getInstanceByName('file')) {
+        if(!$file = UploadedFile::getInstancesByName('file')) {
             return null;
         }
+
+        if(is_array($file)){
+            if(count($file) === 1){
+                $file = $file[0];
+            }
+        }
+
+
+
 
         // set model attr
         $model->file = $file->name;

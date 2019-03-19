@@ -90,10 +90,15 @@
   }
 }
 
-
+$bg-color-wgt: #fafafa;
 
 .kak-upload-dashboard-wgt {
   position: relative;
+
+  .wgt-crop-image-plugin {
+  }
+
+
 
   .wgt-btn {
     display: inline-block;

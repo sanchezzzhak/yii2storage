@@ -18,5 +18,6 @@ class FileUploadAsset extends \yii\web\AssetBundle
 	public $depends = [
 		'yii\jui\JuiAsset',
 		'kak\storage\bundles\TmplAsset',
+		'kak\storage\bundles\CropperAsset',
 	];
 }
