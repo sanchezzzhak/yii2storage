@@ -92,7 +92,9 @@ class UploadAdvanced extends Widget
 	{
         $id   = $this->id;
         $view = $this->getView();
-        $js = "jQuery('#$id').kakStorageAdvancedUpload({})";
+        $js = "jQuery('#$id').kakStorageAdvancedUpload({
+            url: \"{$this->url}\" 
+        })";
         $view->registerJs($js,$view::POS_READY, $id . ':kak-storage-advanced-upload ');
 
 		return $this->render($this->view ,[

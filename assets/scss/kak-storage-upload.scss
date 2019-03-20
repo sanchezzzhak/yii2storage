@@ -90,12 +90,16 @@
   }
 }
 
+
 $bg-color-wgt: #fafafa;
 
 .kak-upload-dashboard-wgt {
   position: relative;
 
   .wgt-crop-image-plugin {
+    .cropper-footer {
+      margin-top: 5px;
+    }
   }
 
 

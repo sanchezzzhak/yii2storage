@@ -179,13 +179,31 @@
 	var defaultOpts = {
 	  template: null,
 	  isHidden: true,
-	  endPointUrl: 'upload?act=crop',
+	  endPointUrl: '/group/default/upload',
 	  
-	  // crop settings
-	  autoCropArea: 0.6,
-	  zoomable: true
+	  // cropperjs settings
+	  cropperOptions: {
+		autoCropArea: 0.6,
+		zoomable: true
+	  },
+	  
+	  labelSave: '<i class="fas fa-crop-alt"></i> Save',
+	  labelCancel: '<i class="fas fa-ban"></i> Cancel',
+	  labelRotateUp: '<i class="fa fa-undo-alt"></i>',
+	  labelRotateDown: '<i class="fa fa-redo-alt"></i>',
+	  labelFlipHorizontal: '<i class="fa fa-arrows-alt-h"></i>',
+	  labelFlipVertical: '<i class="fa fa-arrows-alt-v"></i>',
+	  
+	  enableRotate: true,
+	  enableFlip: true,
+	  
+	  rotateDegrees: 90
+	  
 	};
- 
+
+
+	
+	
 	options = $.extend(defaultOpts, options);
 	Plugin.call(this, app, options);
 	inherits(CropImagePlugin, Plugin);
@@ -198,13 +216,53 @@
   CropImagePlugin.prototype = {
   
 	init: function () {
+	  
 	  var wrap = this.getPluginContainer();
 	
-	  wrap.off('click', '.crop-cancel')
-	  .on('click', '.crop-cancel', $.proxy(this.cropCancel, this));
+	  wrap.off('click', '.crop-cancel').on('click', '.crop-cancel', $.proxy(this.cropCancel, this));
+	  wrap.off('click', '.crop-me').on('click', '.crop-me', $.proxy(this.cropSave, this));
 	  
-	  wrap.off('click', '.crop-me')
-	  .on('click', '.crop-me', $.proxy(this.cropSave, this));
+	  wrap.off('click', '.crop-rotate-up').on('click', '.crop-rotate-up', $.proxy(this.cropRotateUp, this));
+	  wrap.off('click', '.crop-rotate-down').on('click', '.crop-rotate-down', $.proxy(this.cropRotateDown, this));
+	  
+	  wrap.off('click', '.crop-flip-horizontal').on('click', '.crop-flip-horizontal', $.proxy(this.cropFlipHorizontal, this));
+	  wrap.off('click', '.crop-flip-vertical').on('click', '.crop-flip-vertical', $.proxy(this.cropFlipVertical, this));
+	  
+	  
+	  // cropper.scaleX(-1)
+	  // cropper.scaleY(-1)
+
+	  /*
+	  /*
+.cropper-crop-box, .cropper-view-box {
+  border-radius: 50%;
+}
+
+.cropper-view-box {
+  box-shadow: 0 0 0 1px #39f;
+  outline: 0;
+}
+
+function getRoundedCanvas(sourceCanvas) {
+  var canvas = document.createElement('canvas');
+  var context = canvas.getContext('2d');
+  offsetTop = Math.round(cropper.getCropBoxData().top);
+  offsetLeft = Math.round(cropper.getCropBoxData().left);
+  var width = sourceCanvas.width;
+  var height = sourceCanvas.height;
+  canvas.width = width;
+  canvas.height = height;
+  context.imageSmoothingEnabled = true;
+  context.drawImage(sourceCanvas, 0, 0, width, height);
+  context.globalCompositeOperation = 'destination-in';
+  context.beginPath();
+  context.ellipse(width/2, height/2, width/2, height/2, 0 * Math.PI, 0, 45 * Math.PI);
+  context.fill();
+  return canvas;
+}
+
+*/
+
 	  
 	},
 	
@@ -215,12 +273,61 @@
 	},
 	
 	cropSave: function(e){
+	  var self = this;
+	  var el = $(e.currentTarget);
+	  
+	  var img = this.getImage();
+	  var canvas = img.cropper('getCroppedCanvas');
+	  //var imgUrl = canvas.toDataURL('image/jpeg');
+	  
+	  canvas.toBlob(function(blob){
+	    var formData = new FormData();
+		formData.append('cropped', blob);
+		var endPointUrl = self.options.endPointUrl + $.param({ act: 'crop'});
+		$.ajax(endPointUrl, {
+		  method: "post",
+		  data: formData,
+		  processData: false,
+		  contentType: false,
+		  success: function(data) {
+			console.log('Upload success');
+		  },
+		  error: function(err) {
+			console.log('Upload error');
+		  },
+		});
+	  });
+	},
+ 
+	getImage: function(){
+	  var container = this.getPluginContainer();
+	  return container.find('.cropper-container .wrap-image-source');
+	},
+ 
+	cropFlipHorizontal: function(e){
+	  var data = this.getImage().cropper('getImageData');
+	  this.getImage().cropper('scaleX', ( data.scaleX || 1) === 1 ? -1 : 1);
+	},
+ 
+	cropFlipVertical: function(e){
+	  var data = this.getImage().cropper('getImageData');
+	  this.getImage().cropper('scaleY', (data.scaleY || 1) === 1 ? -1 : 1);
+	},
 	
+	cropRotateUp: function(e){
+	  this.getImage().cropper('rotate', this.options.rotateDegrees);
+ 	},
+  
+	cropRotateDown: function(e){
+	  this.getImage().cropper('rotate', this.options.rotateDegrees * -1);
 	},
 	
   	cropCancel: function(e){
       this.hidePlugin();
+      this.app.getPlugin('DeviceUpload').showPlugin();
+      this.app.getPlugin('ViewFiles').showPlugin();
 	},
+	
 	
 	showCrop: function(id, result){
 	  this.app.hidePluginsByType(TYPES.FILE);
@@ -232,44 +339,34 @@
 		return;
 	  }
 	  this.showPlugin();
-	  var image = $('<img>', {src: result.url });
 	  
-	  var wrap = container
-	  .find('.cropper-container')
-	  .css('top', 0)
-	  .css('left', 0)
-	  .empty();
+	  var image = $('<img>', {src: result.url, class: 'wrap-image-source'});
+	  var wrap = container.find('.cropper-container').empty();
 	  
 	  wrap.append(image);
-	  
-	  wrap.find('img').off().cropper({
-		autoCropArea: this.options.autoCropArea,
-		zoomable: this.options.zoomable,
-	  });
+	  wrap.find('img').off().cropper(this.options.cropperOptions);
 	  
 	  console.log('show crop', id, result);
-	  
-	  /*
-	  	/*
-		  $(this).closest(self.selectors.item_download).find('.preview-box > img').off().cropper({
-			  autoCropArea: 0.6,
-			  zoomable: false
-		  }).on('resize.cropper, built.cropper', function(){
-		  $(this).closest(self.selectors.item_download).find('.cropper-container').css('top',0).css('left',0);
-	
-	 	*/
-	  
+	  // todo remove comments
 	},
 	
 	render(stage) {
 	  if (this.options.template === null) {
 		this.options.template = `
-			<div class="cropper-container">
-		
-			</div>
+			<div class="cropper-container"></div>
 			<div class="cropper-footer">
-				<button class="wgt-btn crop-me">crop save</button>
-				<button class="wgt-btn crop-cancel">cancel</button>
+			 	<button class="wgt-btn crop-me">{%# o.labelSave %}</button>
+				<button class="wgt-btn crop-cancel">{%# o.labelCancel %}</button>
+				
+				{% if( o.enableRotate) { %}
+					<button class="wgt-btn crop-rotate-up">{%# o.labelRotateUp %}</button>
+					<button class="wgt-btn crop-rotate-down">{%# o.labelRotateDown %}</button>
+				{% } %}
+				
+				{% if( o.enableFlip) { %}
+					<button class="wgt-btn crop-flip-horizontal">{%# o.labelFlipHorizontal %}</button>
+					<button class="wgt-btn crop-flip-vertical">{%# o.labelFlipVertical %}</button>
+				{% } %}
 			</div>
 		`;
 	  }
@@ -278,7 +375,16 @@
 	  if (this.options.isHidden) {
 		plugin.hide();
 	  }
-	  var compileTmpl = tmpl(this.options.template, {});
+	  var compileTmpl = tmpl(this.options.template, {
+		enableRotate: this.options.enableRotate,
+		enableFlip: this.options.enableFlip,
+		labelSave: this.options.labelSave,
+		labelCancel: this.options.labelCancel,
+		labelRotateUp: this.options.labelRotateUp,
+		labelRotateDown:  this.options.labelRotateDown,
+		labelFlipHorizontal: this.options.labelFlipHorizontal,
+		labelFlipVertical:  this.options.labelFlipVertical
+	  });
 	  plugin.append(compileTmpl);
 	  this.el.find('.wgt-wrap-content').append(plugin);
 	  
@@ -478,13 +584,18 @@
   }
   
   LinkUploadPlugin.prototype = {
+    init: function(){
+	  var wrap = this.getPluginContainer();
+	  wrap.off('click', '.btn-link-upload').on('click', '.btn-link-upload', $.proxy(this.uploadFile, this));
+	},
+ 
 	install: function () {
 	  var template = this.options.template;
 	  if (template === null) {
 		this.options.template = `
 			<div>Enter URL to import a file</div>
-			<div><input type="text" name="{%= o.inputName %}" class="input-form"></div>
-			<div><button class="btn">Import</div>
+			<div><input type="text" class="input-form url-link-upload"></div>
+			<div><button class="btn btn-link-upload">Import</div>
 			`;
 	  }
 	  
@@ -492,6 +603,7 @@
 	  if (target !== undefined) {
 		this.mount(target, this)
 	  }
+	  this.init();
 	},
 	
 	render(stage) {
@@ -499,13 +611,23 @@
 	  if (this.options.isHidden) {
 		plugin.hide();
 	  }
-	  var compileTmpl = tmpl(this.options.template, {
-		inputName: this.options.fileName
-	  });
+	  var compileTmpl = tmpl(this.options.template, {});
 	  
 	  plugin.append(compileTmpl);
 	  this.el.find('.wgt-wrap-content').append(plugin);
-	}
+	},
+ 
+	uploadFile: function(e){
+	  var endPointUrl = this.options.endPointUrl + $.param({ act: 'remote-upload'});
+	  var remoteUrl = this.getPluginContainer().find('.url-link-upload').val();
+      $.ajax(endPointUrl,{
+        method: 'post',
+		data: {
+          remote: remoteUrl
+		}
+	  })
+   
+	},
   };
   
   // ==========================================
@@ -808,17 +930,17 @@
 	  if (!data) {
 		data = new kakStorageAdvancedUpload(this, $.extend({}, $.fn.kakStorageAdvancedUpload.defaults, options, $(this).data()));
 		
-		data.use(LinkUploadPlugin, {
-		  endPointUrl: '/group/default/upload'
-		});
-		data.use(CropImagePlugin, {
-		  endPointUrl: '/group/default/upload?act=crop'
-		});
-		data.use(DeviceUploadPlugin, {
-		  endPointUrl: '/group/default/upload'
-		});
-		data.use(AdaptersPlugin, {});
-		data.use(ViewFilesPlugin, {});
+		var endPountUrl = data.options.url;
+		if (endPountUrl.indexOf('?') === -1) {
+		  endPountUrl+= '?';
+		}
+		var endPointOptions = {endPointUrl: endPountUrl };
+		
+		data.use(LinkUploadPlugin, $.extend(endPointOptions, data.options.linkUpload || {} ));
+		data.use(CropImagePlugin, $.extend(endPointOptions, data.options.cropImage || {} ));
+		data.use(DeviceUploadPlugin, $.extend(endPointOptions, data.options.deviceUpload || {} ));
+		data.use(AdaptersPlugin, data.options.adapters || {});
+		data.use(ViewFilesPlugin, data.options.view || {});
 		
 		$this.data('kakStorageAdvancedUpload', data);
 	  }

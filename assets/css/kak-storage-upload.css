@@ -71,6 +71,8 @@
 
 .kak-upload-dashboard-wgt {
   position: relative; }
+  .kak-upload-dashboard-wgt .wgt-crop-image-plugin .cropper-footer {
+    margin-top: 5px; }
   .kak-upload-dashboard-wgt .wgt-btn {
     display: inline-block;
     vertical-align: bottom;
