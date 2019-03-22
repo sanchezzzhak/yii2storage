@@ -166,8 +166,9 @@ class UploadAction extends BaseUploadAction
                     $storage->getAdapter()->uniqueFilePath($ext)
                 );
 
-                var_dump($mimeType);
-                var_dump(curl_getinfo($ch));
+
+//                var_dump($mimeType);
+//                var_dump(curl_getinfo($ch));
 
                 if (!count($this->result['errors'])) {
                     $ch = curl_init($url);
@@ -181,9 +182,10 @@ class UploadAction extends BaseUploadAction
 
 
                     $relPath = $storage->getAdapter()->getUrl($saveUrl);
-
+                    $displayName = pathinfo($relPath, PATHINFO_BASENAME);
+                    
                     $this->result = [
-                        "name_display" => null,
+                        "name_display" => $displayName,
                         "type" => $mimeType,
                         "size" => $info['download_content_length'],
                         "url" => $relPath,
@@ -227,6 +229,10 @@ class UploadAction extends BaseUploadAction
     protected function handleCropping(): ?string
     {
         $file = UploadedFile::getInstanceByName('cropped');
+
+//        var_dump($file);
+
+
         if (!$file) {
             return null;
         }

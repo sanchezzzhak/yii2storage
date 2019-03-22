@@ -57,7 +57,6 @@ class BaseUploadAction extends Action
      */
     public function image($model_file)
     {
-
         $storage = new Storage($this->storage);
         $adapter = $storage->getAdapter();
         $path_file = $adapter->getAbsolutePath($model_file);
@@ -220,7 +219,6 @@ class BaseUploadAction extends Action
 
         $imagine->setMetadataReader($this->getImageMetadataReader());
         $img = $imagine->open($path);
-
         $this->autoFixImageOrentation($img);
 
         return $img;

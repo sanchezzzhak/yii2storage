@@ -179,12 +179,13 @@
 	var defaultOpts = {
 	  template: null,
 	  isHidden: true,
-	  endPointUrl: '/group/default/upload',
+	  endPointUrl: '',
 	  
 	  // cropperjs settings
 	  cropperOptions: {
 		autoCropArea: 0.6,
-		zoomable: true
+		zoomable: true,
+		rotatable:true
 	  },
 	  
 	  labelSave: '<i class="fas fa-crop-alt"></i> Save',
@@ -196,13 +197,9 @@
 	  
 	  enableRotate: true,
 	  enableFlip: true,
-	  
 	  rotateDegrees: 90
 	  
 	};
-
-
-	
 	
 	options = $.extend(defaultOpts, options);
 	Plugin.call(this, app, options);
@@ -211,6 +208,8 @@
 	this.id = this.options.id || 'CropImage';
 	this.type = TYPES.FILE;
 	this.block = 'wgt-crop-image-plugin';
+	
+	this.fileId = null;
   }
   
   CropImagePlugin.prototype = {
@@ -228,12 +227,9 @@
 	  wrap.off('click', '.crop-flip-horizontal').on('click', '.crop-flip-horizontal', $.proxy(this.cropFlipHorizontal, this));
 	  wrap.off('click', '.crop-flip-vertical').on('click', '.crop-flip-vertical', $.proxy(this.cropFlipVertical, this));
 	  
-	  
-	  // cropper.scaleX(-1)
-	  // cropper.scaleY(-1)
 
 	  /*
-	  /*
+
 .cropper-crop-box, .cropper-view-box {
   border-radius: 50%;
 }
@@ -262,8 +258,6 @@ function getRoundedCanvas(sourceCanvas) {
 }
 
 */
-
-	  
 	},
 	
 	install: function () {
@@ -276,27 +270,37 @@ function getRoundedCanvas(sourceCanvas) {
 	  var self = this;
 	  var el = $(e.currentTarget);
 	  
+	  var viewFilesPlugin = this.app.getPlugin('ViewFiles');
+	  
 	  var img = this.getImage();
 	  var canvas = img.cropper('getCroppedCanvas');
-	  //var imgUrl = canvas.toDataURL('image/jpeg');
+	  var imgUrl = canvas.toDataURL('image/jpeg');
+	  	console.log(`<img src="${imgUrl}">`)
 	  
 	  canvas.toBlob(function(blob){
 	    var formData = new FormData();
 		formData.append('cropped', blob);
+		
 		var endPointUrl = self.options.endPointUrl + $.param({ act: 'crop'});
+		
 		$.ajax(endPointUrl, {
 		  method: "post",
 		  data: formData,
 		  processData: false,
 		  contentType: false,
-		  success: function(data) {
-			console.log('Upload success');
+		  success: function(result) {
+			if (typeof result === 'string') {
+			  result = JSON.parse(result);
+			}
+			viewFilesPlugin.updateFile(self.fileId, result);
+			self.cropCancel();
 		  },
 		  error: function(err) {
 			console.log('Upload error');
-		  },
+		  }
 		});
 	  });
+	  
 	},
  
 	getImage: function(){
@@ -305,13 +309,13 @@ function getRoundedCanvas(sourceCanvas) {
 	},
  
 	cropFlipHorizontal: function(e){
-	  var data = this.getImage().cropper('getImageData');
-	  this.getImage().cropper('scaleX', ( data.scaleX || 1) === 1 ? -1 : 1);
+	  var data = this.getImage().cropper('getData');
+	  this.getImage().cropper('scale', -data.scaleX, data.scaleY);
 	},
  
 	cropFlipVertical: function(e){
-	  var data = this.getImage().cropper('getImageData');
-	  this.getImage().cropper('scaleY', (data.scaleY || 1) === 1 ? -1 : 1);
+	  var data = this.getImage().cropper('getData');
+	  this.getImage().cropper('scale', data.scaleX, -data.scaleY);
 	},
 	
 	cropRotateUp: function(e){
@@ -328,8 +332,9 @@ function getRoundedCanvas(sourceCanvas) {
       this.app.getPlugin('ViewFiles').showPlugin();
 	},
 	
-	
 	showCrop: function(id, result){
+	  this.fileId = id;
+	  
 	  this.app.hidePluginsByType(TYPES.FILE);
 	  this.app.hidePluginsByType(TYPES.VIEW_FILES);
 	  this.app.hidePluginsByType(TYPES.ADAPTER);
@@ -344,10 +349,7 @@ function getRoundedCanvas(sourceCanvas) {
 	  var wrap = container.find('.cropper-container').empty();
 	  
 	  wrap.append(image);
-	  wrap.find('img').off().cropper(this.options.cropperOptions);
-	  
-	  console.log('show crop', id, result);
-	  // todo remove comments
+	  wrap.find('img').off().cropper('destroy').cropper(this.options.cropperOptions);
 	},
 	
 	render(stage) {
@@ -420,6 +422,7 @@ function getRoundedCanvas(sourceCanvas) {
 	this.block = 'wgt-views-files-plugin';
   }
   
+  
   ViewFilesPlugin.prototype = {
     init: function(){
   
@@ -456,12 +459,27 @@ function getRoundedCanvas(sourceCanvas) {
 	  plugin.showCrop(tid, JSON.parse(raw));
 	},
 	
-	addFile: function (result) {
+	getFilesContainer: function(){
+      return this.getPluginContainer().find('.files');
+	},
+	
+	getItemContainer: function(tid){
+	  return this.getFilesContainer().find('.template-download[data-tid="'+ tid +'"]');
+	},
+	
+	getItemResult: function(tid){
+      var node = this.getItemContainer(tid);
+      var result = node.find('input[name="' + this.options.inputName + '"]').val();
+      return result ? JSON.stringify(result): {};
+	},
+	
+	updateFile: function(tid, result){
       
-      var tid = (new Date).getTime();
+      console.log('result', result,  typeof result );
+      
 	  var compileTmpl = $(tmpl(this.options.downloadItemTemplate, {
-	    tid: tid,
-	    file: result,
+		tid: tid,
+		file: result,
 		sizeFormat: formatFileSize(result.size),
 		labelDelete: this.options.labelDelete,
 		labelEdit: this.options.labelEdit,
@@ -470,7 +488,6 @@ function getRoundedCanvas(sourceCanvas) {
 	  
 	  compileTmpl.find('input[name="' + this.options.inputName + '"]')
 	  .val(JSON.stringify(result));
-	  
 	  
 	  if(result.images !==undefined && result.images.thumbnail !==undefined){
 		compileTmpl.find('.preview').css("background-image", 'url(' + result.images.thumbnail.url + ')');
@@ -481,18 +498,30 @@ function getRoundedCanvas(sourceCanvas) {
 		  var btn = $('<button>', {class: 'wgt-btn crop'}).text(this.options.labelCrop);
 		  compileTmpl.find('.wgt-template-actions').append(btn)
 		}
-		
 	  }
 	  
-	  this.el.find('.' + this.block).find('.files').append(compileTmpl);
+	  var node = this.getItemContainer(tid);
+	  if(!node.length){
+		this.getFilesContainer().append(compileTmpl);
+	  }else {
+		compileTmpl.replaceAll(node);
+	  }
 	},
 	
+	addFile: function (result) {
+      var tid = (new Date).getTime();
+	  this.updateFile(tid, result);
+	},
+	
+	// todo добавить редактирование
 	editFile: function(e){
 	  var el = $(e.currentTarget);
 	},
 	
 	removeFile: function(e){
-		var el = $(e.currentTarget).closest('.template-download').remove();
+		var el = $(e.currentTarget).closest('.template-download');
+		var data = el.find('input[name="' + this.options.inputName + '"]').val()
+		el.remove();
 	},
 	
 	render(stage) {
@@ -618,15 +647,20 @@ function getRoundedCanvas(sourceCanvas) {
 	},
  
 	uploadFile: function(e){
+      var self = this;
+	  
+	  var viewFilesPlugin = this.app.getPlugin('ViewFiles');
+   
 	  var endPointUrl = this.options.endPointUrl + $.param({ act: 'remote-upload'});
 	  var remoteUrl = this.getPluginContainer().find('.url-link-upload').val();
       $.ajax(endPointUrl,{
         method: 'post',
-		data: {
-          remote: remoteUrl
-		}
+		dataType: 'json',
+		data: { remote: remoteUrl }
+	  }).done(function(result){
+		viewFilesPlugin.addFile(result);
 	  })
-   
+	  
 	},
   };
   
