@@ -125,6 +125,18 @@ Save model then controller
 
 Once the extension is installed, simply use it in your code by:
 
+
+Configurate social plugins 
+=========
+composer require kak/authclient
+
+```
+
+```
+
+
+
+
 ```php
 <div>
     <?=\kak\storage\Upload::widget([
@@ -150,6 +162,7 @@ pjax event add code
         $('.kak-storage-upload').kakStorageUpload({});
     });
 ```
+
 
 roadmap
 ==========

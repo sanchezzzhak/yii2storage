@@ -399,6 +399,66 @@ function getRoundedCanvas(sourceCanvas) {
   
   function EditFilePlugin(app, options){}
   
+  // ==========================================
+  // INSTAGRAM PLUGIN
+  // ==========================================
+  function InstagramPlugin(app, options) {http://nebesa.local/groups/create#
+	var defaultOpts = {
+	  isHidden: true,
+	  template: null,
+	  authUrl: '',
+	};
+	options = $.extend(defaultOpts, options);
+	Plugin.call(this, app, options);
+	inherits(InstagramPlugin, Plugin);
+	
+	this.id = this.options.id || 'Instagram';
+	this.type = TYPES.ADAPTER;
+	this.block = 'wgt-instagram-plugin';
+	
+	this.authWindow = null;
+	this.authStage = false;
+  }
+  
+  InstagramPlugin.prototype = {
+    init: function(){
+      var wrap = this.getPluginContainer();
+      
+      wrap.off('click', '.btn-inst-connect')
+	  .on('click', '.btn-inst-connect', $.proxy(this.connectionAuthInstagram, this));
+      
+	},
+	
+	install: function () {
+	  
+	  if (this.options.template === null) {
+		this.options.template = `<div class="auth-container">
+			<button class="btn btn-inst-connect">Connect to Instagram</button>
+		</div>`;
+	  }
+   
+	  var target = this.options.target;
+	  this.mount(target, this);
+	  this.init();
+	},
+	
+    render: function(stage){
+	  var plugin = $('<div>', {class: this.block});
+	  if (this.options.isHidden) {
+		plugin.hide();
+	  }
+	  var compileTmpl = tmpl(this.options.template, {});
+  
+	  plugin.append(compileTmpl);
+	  this.el.find('.wgt-wrap-content').append(plugin);
+	},
+ 
+	connectionAuthInstagram: function(e){
+	  this.authWindow = window.open(this.options.authUrl, '_blank')
+	},
+	
+  };
+  
   
   // ==========================================
   // VIEW FILES PLUGIN
@@ -426,7 +486,7 @@ function getRoundedCanvas(sourceCanvas) {
   ViewFilesPlugin.prototype = {
     init: function(){
   
-	  var selector = this.el.find('.' + this.block).find('.files');
+	  var selector = this.getFilesContainer();
 	  
 	  selector.off('click', '.delete')
 	  .on('click', '.delete', $.proxy(this.removeFile, this));
@@ -973,6 +1033,11 @@ function getRoundedCanvas(sourceCanvas) {
 		data.use(LinkUploadPlugin, $.extend(endPointOptions, data.options.linkUpload || {} ));
 		data.use(CropImagePlugin, $.extend(endPointOptions, data.options.cropImage || {} ));
 		data.use(DeviceUploadPlugin, $.extend(endPointOptions, data.options.deviceUpload || {} ));
+	 
+		if (data.options.instagram) {
+		  data.use(InstagramPlugin, data.options.instagram);
+		}
+		
 		data.use(AdaptersPlugin, data.options.adapters || {});
 		data.use(ViewFilesPlugin, data.options.view || {});
 		

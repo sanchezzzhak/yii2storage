@@ -16,7 +16,6 @@ class StorageAsset extends \yii\web\AssetBundle
         'css/kak-storage-upload.css',
     ];
     public $js = [
-        'js/jquery.fileupload-image-editor.js',
         'js/kak-storage-advanced-upload.js',
     ];
 

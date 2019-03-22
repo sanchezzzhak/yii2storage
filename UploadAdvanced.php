@@ -1,9 +1,11 @@
 <?php
 namespace kak\storage;
 
-use Yii;
 use yii\base\Widget;
 use yii\base\Model;
+use yii\helpers\Html;
+use yii\helpers\Json;
+use yii\helpers\StringHelper;
 use yii\helpers\Url;
 
 
@@ -68,7 +70,7 @@ class UploadAdvanced extends Widget
         $this->options['multiple']  = ($this->multiple == true);
 
         if(!$this->id ) {
-            $class = explode('\\',get_class($this->model));
+            $class = StringHelper::basename(get_class($this->model));
             $this->id = array_pop($class). '-form';
         }
         if(!isset($this->options['id'])) {
@@ -92,9 +94,15 @@ class UploadAdvanced extends Widget
 	{
         $id   = $this->id;
         $view = $this->getView();
-        $js = "jQuery('#$id').kakStorageAdvancedUpload({
-            url: \"{$this->url}\" 
-        })";
+
+        $pluginOptions = [
+            'url' => $this->url
+        ];
+
+        $this->prepatePluginOptionsWithAuth($pluginOptions);
+
+        $pluginOptionsString = Json::htmlEncode($pluginOptions);
+        $js = "jQuery('#{$id}').kakStorageAdvancedUpload({$pluginOptionsString})";
         $view->registerJs($js,$view::POS_READY, $id . ':kak-storage-advanced-upload ');
 
 		return $this->render($this->view ,[
@@ -102,6 +110,55 @@ class UploadAdvanced extends Widget
             'options'     => $this->options
 		]);
 	}
+
+    /**
+     * @return yii\authclient\Collection|null
+     */
+	private function getAuthClientCollection()
+    {
+        $authClientCollection = \Yii::$app->get('authClientCollection', false);
+        return $authClientCollection;
+    }
+
+    /**
+     * @param array $options
+     */
+	private function prepatePluginOptionsWithAuth(array &$options): void
+    {
+        $authClientCollection = $this->getAuthClientCollection();
+        if(!$authClientCollection) {
+            return;
+        }
+
+        /*
+         /client_id=CLIENT-ID&redirect_uri=REDIRECT-URI&response_type=code
+         */
+
+
+
+        if($authClientCollection->hasClient('instagram')){
+            /** @var $client \kak\authclient\Instagram  */
+            $client = $authClientCollection->getClient('instagram');
+            $options['instagram'] = [
+                'authUrl' => $client->buildAuthUrl([
+                    'redirect_uri' => Url::to('/storage/auth/token?id=instgram', true)
+                ])
+            ];
+        }
+
+        if($authClientCollection->hasClient('dropbox')){
+
+        }
+
+        if($authClientCollection->hasClient('facebook')){
+
+        }
+
+        if($authClientCollection->hasClient('vkontakte')){
+
+        }
+    }
+
 
 	/**
 	 * @return boolean whether this widget is associated with a data model.
