@@ -59,6 +59,12 @@ class UploadAdvanced extends Widget
     public $labelCancel            = 'Cancel';
     public $labelDelete            = 'Delete';
 
+
+    public $instagramEnable = false;
+    public $facebookEnable  = false;
+    public $vkontakteEnable = false;
+    public $dropboxEnable = false;
+
     /**
      * Init widget
      */
@@ -130,32 +136,46 @@ class UploadAdvanced extends Widget
             return;
         }
 
-        /*
-         /client_id=CLIENT-ID&redirect_uri=REDIRECT-URI&response_type=code
-         */
+        $baseRoute = '/storage/auth/token';
 
-
-
-        if($authClientCollection->hasClient('instagram')){
+        if($this->instagramEnable && $authClientCollection->hasClient('instagram')){
             /** @var $client \kak\authclient\Instagram  */
             $client = $authClientCollection->getClient('instagram');
             $options['instagram'] = [
                 'authUrl' => $client->buildAuthUrl([
-                    'redirect_uri' => Url::to('/storage/auth/token?id=instgram', true)
+                    'redirect_uri' => Url::to([$baseRoute, 'id' => $client->getName()], true)
                 ])
             ];
         }
 
-        if($authClientCollection->hasClient('dropbox')){
+//        if($this->dropboxEnable && $authClientCollection->hasClient('dropbox')){
+//            /** @var $client \kak\authclient\DropBox  */
+//            $client = $authClientCollection->getClient('dropbox');
+//            $options['vkontakte'] = [
+//                'authUrl' => $client->buildAuthUrl([
+//                    'redirect_uri' => Url::to([$baseRoute, 'id' => $client->getName()], true)
+//                ])
+//            ];
+//        }
 
+        if($this->facebookEnable && $authClientCollection->hasClient('facebook')){
+            /** @var $client \yii\authclient\clients\Facebook  */
+            $client = $authClientCollection->getClient('facebook');
+            $options['facebook'] = [
+                'authUrl' => $client->buildAuthUrl([
+                    'redirect_uri' => Url::to([$baseRoute, 'id' => $client->getName()], true)
+                ])
+            ];
         }
 
-        if($authClientCollection->hasClient('facebook')){
-
-        }
-
-        if($authClientCollection->hasClient('vkontakte')){
-
+        if($this->vkontakteEnable && $authClientCollection->hasClient('vkontakte')){
+            /** @var $client \yii\authclient\clients\VKontakte  */
+            $client = $authClientCollection->getClient('vkontakte');
+            $options['vkontakte'] = [
+                'authUrl' => $client->buildAuthUrl([
+                    'redirect_uri' => Url::to([$baseRoute, 'id' => $client->getName()], true)
+                ])
+            ];
         }
     }
 

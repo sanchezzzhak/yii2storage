@@ -89,24 +89,34 @@ class UploadAction extends BaseUploadAction
                 $ext = $extMimeType;
             }
 
-            $storage = new Storage($this->storage);
-            $adapter = $storage->getAdapter();
+            $storage = $this->getStorage();
+            $result = $storage->save($this->storageId, $file);
 
-            $pathFile = $adapter->uniqueFilePath($ext);
-            $model->file = $adapter->getUrl($pathFile);
-
-            if (!count($model->getErrors()) && $file->error == 0 && $file->saveAs($pathFile)) {
-                chmod($pathFile, 0666);
+            if ($result !== []){
                 $this->result = [
                     "name_display" => $file->name,
                     "type" => $model->mime_type,
-                    "size" => $model->size,
-                    "url" => $model->file,
-                    "storage" => $storage->getId(),
+                    "size" => $result['size'],
+                    "url" => '/' . $result['path'],
+                    "timestamp" => $result['timestamp'],
+                    "storage" => $this->storageId,
                     "images" => [],
                 ];
-                $this->image($model->file);
+               $this->processImageWithResult();
+
             }
+
+
+
+
+//            $pathFile = $adapter->uniqueFilePath($ext);
+//            $model->file = $adapter->getUrl($pathFile);
+//
+//            if (!count($model->getErrors()) && $file->error == 0 && $file->saveAs($pathFile)) {
+//                chmod($pathFile, 0666);
+//
+//
+//            }
         }
 
         $this->result['errors'] = $model->getErrors();
@@ -192,7 +202,7 @@ class UploadAction extends BaseUploadAction
                         "storage" => $storage->getId(),
                         "images" => [],
                     ];
-                    $this->image($relPath);
+                    $this->processImageWithResult($relPath);
                     return $this->response();
                 }
 

@@ -24,8 +24,33 @@ or add
 ```
 "kak/storage": "*"
 ```
-
 to the require section of your `composer.json` file and run command `composer update`
+
+
+
+Tok
+-----
+
+* Storage API
+* Widjet Upload
+
+
+
+
+
+
+
+
+
+
+/*
+* 
+*    "league/flysystem": "^1.0"
+*
+*
+*/
+
+
 
 
 Usage
