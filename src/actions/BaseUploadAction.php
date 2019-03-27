@@ -20,7 +20,6 @@ class BaseUploadAction extends Action
     public static $EXTENSION_IMAGE = ['image/gif', 'image/png', 'image/jpg', 'image/jpeg'];
 
 
-
     public $extension_allowed = [];
     public $image_width_max = 1024;
     public $image_height_max = 768;
@@ -34,9 +33,9 @@ class BaseUploadAction extends Action
         'quality' => 100
     ];
 
+    public $basePath = '/';
+
     public $result = [];
-
-
     public $storageId = 'tmp';
 
     public $storageClass = 'storage';
@@ -51,8 +50,6 @@ class BaseUploadAction extends Action
     }
 
 
-
-
     /**
      * @param $path_file
      * @param $model
@@ -63,53 +60,52 @@ class BaseUploadAction extends Action
         $storage = $this->getStorage();
 
         $adapter = $storage->getAdapterByStorageId($this->storageId);
-        $filePath = $this->result['url'];
+        $filePath = $this->result['path'];
 
+        foreach ($this->resize_image as $prefix => $param) {
+            list($image_width, $image_height) = $param;
+            $type = isset($param[2]) ? $param[2] : UploadAction::IMAGE_RESIZE;
 
-//
-//        if ($width > 0 || $height > 0) {
+            $options = ArrayHelper::getValue($param, 'options', []);
+            $options = array_merge($this->default_image_options, $options);
 
-            //$this->resizeImageMaxOptimisation($path_file);
-
-            foreach ($this->resize_image as $prefix => $param) {
-
-
-                list($image_width, $image_height) = $param;
-                $type = isset($param[2]) ? $param[2] : UploadAction::IMAGE_RESIZE;
-
-                $options = ArrayHelper::getValue($param, 'options', []);
-                $options = array_merge($this->default_image_options, $options);
-
-                switch ($type) {
-                    case UploadAction::IMAGE_RESIZE:
-
-                        $result = $storage->resizeImagePreviewByStorageId(
-                            $this->storageId,
-                            $filePath,
-                            $prefix,
-                            $image_width,
-                            $image_height,
-                            $options
-                        );
-                        break;
-                    case UploadAction::IMAGE_THUMB:
-                        $result = $storage->resizeImageThumbnailByStorageId(
-                            $this->storageId,
-                            $filePath,
-                            $prefix,
-                            $image_width,
-                            $image_height,
-                            $options
-                        );
-                        break;
-                }
-
-                $this->result['images'][$prefix] = $result;
+            switch ($type) {
+                case UploadAction::IMAGE_RESIZE:
+                    $result = $storage->resizeImagePreviewByStorageId(
+                        $this->storageId,
+                        $filePath,
+                        $prefix,
+                        $image_width,
+                        $image_height,
+                        $options
+                    );
+                    break;
+                case UploadAction::IMAGE_THUMB:
+                    $result = $storage->resizeImageThumbnailByStorageId(
+                        $this->storageId,
+                        $filePath,
+                        $prefix,
+                        $image_width,
+                        $image_height,
+                        $options
+                    );
+                    break;
             }
 
+            if ($result !== []) {
+                $result = $this->prepareResult($result);
+                $this->result['images'][$prefix] = $result;
+            }
+        }
 
-        /*** Image end */
     }
+
+    public function prepareResult($result)
+    {
+        $result["storage"] = $this->storageId;
+        return $result;
+    }
+
 
     /**
      * @return array

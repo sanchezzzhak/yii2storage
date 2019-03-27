@@ -8,8 +8,9 @@ use yii\helpers\ArrayHelper;
 use yii\helpers\FileHelper;
 use yii\log\Logger;
 use yii\web\UploadedFile;
+use Imagine\Image\Box;
+use Imagine\Image\ImageInterface;
 use kak\storage\adapters\AbstractFs;
-
 
 /***
  * Class Storage
@@ -85,14 +86,20 @@ class Storage extends Component implements StorateInterface
 
         $level = $this->getStorageLevelById($storageId);
         $fileName = $adapter->uniqueFilePath($ext, $level);
-
         $fileStorePath = sprintf('%s/%s', $storageId, $fileName);
+
+
         $isWrite = $adapter->writeStream($fileStorePath, $stream);
+
         $result = $adapter->getMetadata($fileStorePath);
 
-        return $isWrite && $result
-            ? $result
-            : [];
+        if($isWrite && $result){
+            $result['type'] = $adapter->getMimetype($fileStorePath);
+            $result['path'] = $fileStorePath;
+
+            return $result;
+        }
+        return [];
     }
 
     public function save(string $storageId, $file, array $options = []): array
@@ -113,18 +120,6 @@ class Storage extends Component implements StorateInterface
         fclose($stream);
         return $result;
     }
-
-
-   // ===== addons =====
-
-
-
-
-
-
-
-
-
 
 
     /**
@@ -159,20 +154,68 @@ class Storage extends Component implements StorateInterface
      * @param \Imagine\Image\ImageInterface $img
      * @throws \ImagickException
      */
-    private function autoFixImageOrentation(\Imagine\Image\ImageInterface $img): void
+    private function autoFixImageOrentation(ImageInterface $img): void
     {
         $metadata = $img->metadata();
         $data = $metadata->toArray();
 
-        $orientation = $data['exif.Orientation'] ?? 0;
-        if ($orientation) {
+        $orientation = 0;
+        if(array_key_exists('exif.Orientation', $data)){
+            $orientation = $data['exif.Orientation'];
+        }else if(array_key_exists('ifd0.Orientation', $data)) {
+            $orientation = $data['ifd0.Orientation'];
+        }
+
+        $size = $img->getSize();
+        if ($size->getWidth() > $size->getHeight()) {
+            // Landscape
             switch ($orientation) {
-                case 8:
-                    $img->rotate(-90);
+                case 2:
+                    $img->flipHorizontally();
+                    break;
                 case 3:
                     $img->rotate(180);
+                    break;
+                case 4:
+                    $img->rotate(180)->flipHorizontally();
+                    break;
+                case 5:
+                    $img->rotate(90)->flipHorizontally();
+                    break;
                 case 6:
                     $img->rotate(90);
+                    break;
+                case 7:
+                    $img->rotate(-90)->flipHorizontally();
+                    break;
+                case 8:
+                    $img->rotate(-90);
+                    break;
+            }
+        } else {
+            // Portrait or Square
+            switch ($orientation) {
+                case 2:
+                    $img->flipHorizontally();;
+                    break;
+                case 3:
+                    $img->flipVertically()->flipHorizontally();;
+                    break;
+                case 4:
+                    $img->flipVertically();
+                    break;
+                case 5:
+                    $img->rotate(90)->flipHorizontally();
+                    break;
+                case 6:
+                    $img->rotate(90);
+                    break;
+                case 7:
+                    $img->rotate(-90)->flipHorizontally();
+                    break;
+                case 8:
+                    $img->rotate(-90);
+                    break;
             }
         }
     }
@@ -186,12 +229,24 @@ class Storage extends Component implements StorateInterface
     {
         $imagine = $this->getImageDriver();
         $imagine->setMetadataReader($this->getImageMetadataReader());
+
         $img = $imagine->read($stream);
         $this->autoFixImageOrentation($img);
 
         return $img;
     }
 
+    public function getResizeImageFormatByMimeType($mimeType)
+    {
+        $followingExtensions = ["bmp", "gif", "jpeg", "png", "wbmp", "webp", "xbm"];
+        $listExtensions  = FileHelper::getExtensionsByMimeType($mimeType);
+        foreach ($followingExtensions as $extension){
+            if(in_array($extension, $listExtensions)){
+                return $extension;
+            }
+        }
+        return null;
+    }
 
     /**
      * @param $storageId
@@ -214,13 +269,19 @@ class Storage extends Component implements StorateInterface
     ): array
     {
         $adapter = $this->getAdapterByStorageId($storageId);
+        $mimeType = $adapter->getMimetype($filePath);
+
+        $resizeFormat = $this->getResizeImageFormatByMimeType($mimeType);
+        if((string)$resizeFormat === '') {
+            return [];
+        }
+
         $stream = $adapter->readStream($filePath);
-
-
         $img = $this->readImageStream($stream);
         $size = $img->getSize();
 
         $info = pathinfo($filePath);
+
         $fileStorePath = sprintf('%s/%s-%s', $info['dirname'], $prefix, $info['basename']);
 
         $width = $size->getWidth();
@@ -235,10 +296,12 @@ class Storage extends Component implements StorateInterface
             $height = $resizeHeight;
         }
 
-        $img->resize(new \Imagine\Image\Box($width, $height));
+        $img->resize(new Box($width, $height));
 
         $tmpFile = tempnam(sys_get_temp_dir(), sprintf('img-%s', time()));
-        $img->save($tmpFile);
+        $img->save($tmpFile, [
+           'format' => $resizeFormat
+        ]);
 
         if(is_resource($stream)){
             fclose($stream);
@@ -249,6 +312,7 @@ class Storage extends Component implements StorateInterface
         if(is_resource($stream)){
             fclose($stream);
         }
+
         @unlink($tmpFile);
         $result = $adapter->getMetadata($fileStorePath);
 
@@ -276,24 +340,35 @@ class Storage extends Component implements StorateInterface
     ): array
     {
         $adapter = $this->getAdapterByStorageId($storageId);
-        $stream = $adapter->readStream($filePath);
 
+        $mimeType = $adapter->getMimetype($filePath);
+
+        $resizeFormat = $this->getResizeImageFormatByMimeType($mimeType);
+        if((string)$resizeFormat === '') {
+            return [];
+        }
+
+        $stream = $adapter->readStream($filePath);
         $img = $this->readImageStream($stream);
 
         $info = pathinfo($filePath);
         $fileStorePath = sprintf('%s/%s-%s', $info['dirname'], $prefix, $info['basename']);
 
-        $img->thumbnail(new \Imagine\Image\Box(
-            $resizeWidth,
-            $resizeHeight
-        ), \Imagine\Image\ImageInterface::THUMBNAIL_OUTBOUND);
-
         $tmpFile = tempnam(sys_get_temp_dir(), sprintf('img-%s', time()));
-        $img->save($tmpFile);
+
+        $img->thumbnail(
+            new Box($resizeWidth, $resizeHeight),
+            ImageInterface::THUMBNAIL_OUTBOUND
+        )->save($tmpFile, [
+            'format' => $resizeFormat
+        ]);
 
         if(is_resource($stream)){
             fclose($stream);
         }
+
+        var_dump($tmpFile);
+
 
         $stream = fopen($tmpFile, 'r+');
         $isWrite = $adapter->writeStream($fileStorePath, $stream);

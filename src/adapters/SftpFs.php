@@ -54,7 +54,7 @@ class SftpFs extends AbstractFs
         if ((string)$this->username === '') {
             throw new InvalidConfigException('The "username" property must be set.');
         }
-        if ((string)$this->password === '' || (string)$this->privateKey === '') {
+        if ((string)$this->password === '' && (string)$this->privateKey === '') {
             throw new InvalidConfigException('Either "password" or "privateKey" property must be set.');
         }
         if ((string)$this->root !== '') {

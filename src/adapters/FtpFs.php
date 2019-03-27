@@ -59,9 +59,11 @@ class FtpFs extends AbstractFs
         if ((string)$this->host === '') {
             throw new InvalidConfigException('The "host" property must be set.');
         }
+
         if ((string)$this->root !== '') {
             $this->root = Yii::getAlias($this->root);
         }
+
         parent::init();
     }
 

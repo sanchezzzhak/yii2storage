@@ -46,8 +46,18 @@ Tok
 /*
 * 
 *    "league/flysystem": "^1.0"
-*
-*
+         "league/flysystem-aws-s3-v3": "^1.0",
+         "spatie/flysystem-dropbox": "^1.0",
+         "league/flysystem-rackspace": "^1.0",
+         "league/flysystem-gridfs": "^1.0",
+         "league/flysystem-sftp": "^1.0",
+         "league/flysystem-webdav": "^1.0",
+         "league/flysystem-ziparchive": "^1.0",
+         "league/flysystem-cached-adapter": "^1.0",
+         "league/flysystem-replicate-adapter": "^1.0",
+         "league/flysystem-azure": "^1.0",
+         "league/flysystem-memory": "^1.0",
+         "cedricziel/flysystem-gcs": "^1.1"*
 */
 
 

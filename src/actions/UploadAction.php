@@ -1,13 +1,4 @@
-<?php
-/**
- * Created by JetBrains PhpStorm.
- * User: Александр
- * Date: 06.04.14
- * Time: 2:43
- * To change this template use File | Settings | File Templates.
- */
-
-namespace kak\storage\actions;
+<?php namespace kak\storage\actions;
 
 use kak\storage\models\UploadForm;
 
@@ -36,11 +27,11 @@ class UploadAction extends BaseUploadAction
 
     public function init()
     {
-        parent::init();
-
         if (!isset($this->form_model)) {
             $this->form_model = Yii::createObject(['class' => $this->form_name]);
         }
+        parent::init();
+
     }
 
     /**
@@ -67,14 +58,17 @@ class UploadAction extends BaseUploadAction
         $extList = [];
         if ($model->validate()) {
             $mimeType = $file->type;
-            if ($mimeType == 'application/octet-stream')
+            if ($mimeType == 'application/octet-stream'){
                 $mimeType = FileHelper::getMimeType($file->tempName);
+            }
 
-            if ($mimeType != 'application/octet-stream')
+            if ($mimeType != 'application/octet-stream'){
                 $extList = FileHelper::getExtensionsByMimeType($mimeType);
+            }
 
-            if ($mimeType == 'application/octet-stream' && !in_array('application/octet-stream', $this->extension_allowed))
+            if ($mimeType == 'application/octet-stream' && !in_array('application/octet-stream', $this->extension_allowed)){
                 $mimeType = $this->getExtension($model->file);
+            }
 
             if (count($this->extension_allowed) && !in_array($mimeType, $this->extension_allowed)) {
                 $model->addError('file', 'extension file not allowed');
@@ -91,32 +85,20 @@ class UploadAction extends BaseUploadAction
 
             $storage = $this->getStorage();
             $result = $storage->save($this->storageId, $file);
+            $result = $this->prepareResult($result);
 
             if ($result !== []){
-                $this->result = [
+
+                $result = array_merge($result, [
                     "name_display" => $file->name,
-                    "type" => $model->mime_type,
-                    "size" => $result['size'],
-                    "url" => '/' . $result['path'],
-                    "timestamp" => $result['timestamp'],
-                    "storage" => $this->storageId,
                     "images" => [],
-                ];
-               $this->processImageWithResult();
+                ]);
+                $this->result = $result;
+
+                $this->processImageWithResult();
 
             }
 
-
-
-
-//            $pathFile = $adapter->uniqueFilePath($ext);
-//            $model->file = $adapter->getUrl($pathFile);
-//
-//            if (!count($model->getErrors()) && $file->error == 0 && $file->saveAs($pathFile)) {
-//                chmod($pathFile, 0666);
-//
-//
-//            }
         }
 
         $this->result['errors'] = $model->getErrors();
@@ -129,6 +111,7 @@ class UploadAction extends BaseUploadAction
             return null;
         }
 
+     //   $urlInfo = parse_url($url);
 
         $ch = curl_init($url);
         curl_setopt_array($ch, [
@@ -139,8 +122,7 @@ class UploadAction extends BaseUploadAction
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_SSL_VERIFYPEER => false
         ]);
-        
-        
+
         if (curl_exec($ch) !== false) {
             $info = curl_getinfo($ch);
             list($mimeType) = explode(';', $info['content_type'], 2);
@@ -150,12 +132,10 @@ class UploadAction extends BaseUploadAction
                 $mimeType = $this->getExtension($url);
             }
 
-
             if ($info['http_code'] == 200) {
                 $this->result['errors'] = [];
 
                 $extMimeType = count($extList) ? end($extList) : '';
-
                 if (count($this->extension_allowed) && !in_array($mimeType, $this->extension_allowed)) {
                     $this->result['errors']['file'] = Yii::t('app', 'Wrong format of the file extension');
                     return $this->response();
@@ -171,18 +151,15 @@ class UploadAction extends BaseUploadAction
                     $ext = $extMimeType;
                 }
 
-                $storage = new Storage($this->storage);
-                $saveUrl = $storage->getAdapter()->getAbsolutePath(
-                    $storage->getAdapter()->uniqueFilePath($ext)
-                );
 
+                $displayName = '';
+                $storage = $this->getStorage();
 
-//                var_dump($mimeType);
-//                var_dump(curl_getinfo($ch));
+                $tmpFile = tempnam(sys_get_temp_dir(), sprintf('img-%s', time()));
 
                 if (!count($this->result['errors'])) {
                     $ch = curl_init($url);
-                    $fp = fopen($saveUrl, 'w+');
+                    $fp = fopen($tmpFile, 'w+');
                     curl_setopt($ch, CURLOPT_FILE, $fp);
                     curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
                     curl_setopt($ch, CURLOPT_HEADER, 0);
@@ -191,18 +168,20 @@ class UploadAction extends BaseUploadAction
                     fclose($fp);
 
 
-                    $relPath = $storage->getAdapter()->getUrl($saveUrl);
-                    $displayName = pathinfo($relPath, PATHINFO_BASENAME);
-                    
-                    $this->result = [
-                        "name_display" => $displayName,
-                        "type" => $mimeType,
-                        "size" => $info['download_content_length'],
-                        "url" => $relPath,
-                        "storage" => $storage->getId(),
-                        "images" => [],
-                    ];
-                    $this->processImageWithResult($relPath);
+                    $result = $storage->save($this->storageId, [
+                        'tmp_name' => $tmpFile,
+                        'name' => $displayName
+                    ]);
+                    $result = $this->prepareResult($result);
+
+                    if ($result !== []){
+                        $result = array_merge($result, [
+                            "name_display" => $displayName,
+                            "images" => [],
+                        ]);
+                        $this->result = $result;
+                        $this->processImageWithResult();
+                    }
                     return $this->response();
                 }
 
@@ -239,15 +218,11 @@ class UploadAction extends BaseUploadAction
     protected function handleCropping(): ?string
     {
         $file = UploadedFile::getInstanceByName('cropped');
-
-//        var_dump($file);
-
+        $replaceFile = Yii::$app->request->post('replace');
 
         if (!$file) {
             return null;
         }
-
-
         $this->saveModel($file);
 
         return $this->response();

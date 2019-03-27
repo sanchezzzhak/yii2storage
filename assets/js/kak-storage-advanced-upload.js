@@ -345,7 +345,7 @@ function getRoundedCanvas(sourceCanvas) {
 	  }
 	  this.showPlugin();
 	  
-	  var image = $('<img>', {src: result.url, class: 'wrap-image-source'});
+	  var image = $('<img>', {src: result.path, class: 'wrap-image-source'});
 	  var wrap = container.find('.cropper-container').empty();
 	  
 	  wrap.append(image);
@@ -550,7 +550,7 @@ function getRoundedCanvas(sourceCanvas) {
 	  .val(JSON.stringify(result));
 	  
 	  if(result.images !==undefined && result.images.thumbnail !==undefined){
-		compileTmpl.find('.preview').css("background-image", 'url(' + result.images.thumbnail.url + ')');
+		compileTmpl.find('.preview').css("background-image", 'url(' + result.images.thumbnail.path + ')');
 		
 		// is enable plugin crop
 		var cropPlugin = this.app.getPlugin('CropImage');
@@ -880,10 +880,10 @@ function getRoundedCanvas(sourceCanvas) {
 		data.context.remove();
 	
 		$.each(data.result.files, function (index, file) {
-		  if (file.url) {
+		  if (file.path) {
 			var link = $('<a>')
 			.attr('target', '_blank')
-			.prop('href', file.url);
+			.prop('href', file.path);
 			$(data.context.children()[index])
 			.wrap(link);
 		  } else if (file.error) {

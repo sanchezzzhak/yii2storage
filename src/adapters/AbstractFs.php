@@ -8,6 +8,7 @@ use League\Flysystem\Cached\CachedAdapter;
 use League\Flysystem\Replicate\ReplicateAdapter;
 use yii\base\Component;
 use yii\base\InvalidConfigException;
+use yii\helpers\FileHelper;
 
 
 /**
@@ -128,7 +129,11 @@ abstract class AbstractFs extends BaseObject
         for ($i = 0; $i < $level; $i++) {
             $filedir .= "/" . substr($filename, $i * 2, 2);
         }
-        $filepath = sprintf( '%s/%s', $filedir , $filename);
+        if($filedir !== ''){
+            $filepath = sprintf( '%s/%s', $filedir , $filename);
+        }else {
+            $filepath = $filename;
+        }
 
         if ($this->has($filepath)) {
             $filepath = $this->uniqueFilePath($ext, $level, $generateFileNameType);
