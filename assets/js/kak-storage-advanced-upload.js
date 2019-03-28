@@ -625,7 +625,8 @@ function getRoundedCanvas(sourceCanvas) {
 	  target: null,
 	  template: null,
 	  isHidden: true,
-	  inputName: 'link'
+	  labelInputTitle: 'Enter URL to import a file',
+	  labelImport: 'Import',
 	};
 	
 	options = $.extend(defaultOpts, options);
@@ -647,9 +648,9 @@ function getRoundedCanvas(sourceCanvas) {
 	  var template = this.options.template;
 	  if (template === null) {
 		this.options.template = `
-			<div>Enter URL to import a file</div>
+			<div>{%= o.labelInputTitle %}</div>
 			<div><input type="text" class="input-form url-link-upload"></div>
-			<div><button class="btn btn-link-upload">Import</div>
+			<div><button class="btn btn-link-upload">{%= o.labelImport %}</div>
 			`;
 	  }
 	  
@@ -665,7 +666,10 @@ function getRoundedCanvas(sourceCanvas) {
 	  if (this.options.isHidden) {
 		plugin.hide();
 	  }
-	  var compileTmpl = tmpl(this.options.template, {});
+	  var compileTmpl = tmpl(this.options.template, {
+		labelInputTitle: this.options.labelInputTitle,
+		labelImport: this.options.labelImport
+	  });
 	  
 	  plugin.append(compileTmpl);
 	  this.el.find('.wgt-wrap-content').append(plugin);
@@ -713,7 +717,6 @@ function getRoundedCanvas(sourceCanvas) {
 	  labelCancel: 'Cancel',
 	  labelDelete: 'Delete',
 	  labelProcessingUpload: 'Processing',
-	  
 	  fileName: 'file[]'
 	};
 	
@@ -757,13 +760,13 @@ function getRoundedCanvas(sourceCanvas) {
 	  var uploadButton = $('<button/>')
 	  .addClass('wgt-btn')
 	  .prop('disabled', false)
-	  .text('Start')
+	  .text(self.options.labelStart)
 	  .on('click', function () {
 		var $this = $(this),
 		  data = $this.data();
 		$this
 		.off('click')
-		.text('Abort')
+		.text(self.options.labelCancel)
 		.on('click', function () {
 		  $this.remove();
 		  data.abort();

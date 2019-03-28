@@ -9,17 +9,13 @@ use yii\helpers\Url;
 
 
 /**
-
  * Class UploadAdvanced
  * @usage
  * ```php
-    <?= \kak\storage\UploadAdvanced::widget([
-        'model' => $upload_form,
-        'label_btn' => 'Select File',
-        'auto_upload' => true,
-        'multiple' => true,
-        'url' => '/upload'
-    ]); ?>
+ * <?= \kak\storage\UploadAdvanced::widget([
+      'model' => $upload_form,
+      'url' => '/upload',
+ * ]); ?>
  * ```
  */
 class UploadAdvanced extends Widget
@@ -28,35 +24,55 @@ class UploadAdvanced extends Widget
 	 * @var Model the data model that this widget is associated with.
 	 */
 	public $model;
-    /***
-     * Config JQuery Upload File
-     */
+
     public $url = '/upload';
-
-    public $autoUpload = true;
-	public $multiple = true;
-    public $progressbarAll = false;
-    public $crop = true;
-    public $singleUpload = false;
-
     public $options = [];
+
+    /**
+     * @var bool use auto translation
+     */
+    public $i18n = true;
+    /**
+     * @var array = [
+     * 'multiple' => true,
+     * 'autoUpload' => false,
+     * 'dropZone' => true,
+     * 'dropZoneEffect' => true,
+     * 'singleFileUploads' => false,
+     * 'labelUpload' => 'Select files ...',
+     * 'labelDropZone' => 'Drop files here',
+     * 'labelStart' => 'Start',
+     * 'labelCancel' => 'Cancel',
+     * 'labelDelete' => 'Delete',
+     * 'labelProcessingUpload' => 'Processing',
+     * ]
+     */
+    public $pluginDeviceUploadOptions = [];
+    /**
+     * @var array = [
+     * 'labelInputTitle' => 'Enter URL to import a file',
+     * 'labelImport' => 'Import',
+     * ]
+     */
+    public $pluginLinkUploadOptions = [];
+    public $pluginCropImageOptions = [];
+    public $pluginAdaptersOptions = [];
+    /**
+     * @var array = [
+     * 'labelDelete' => 'Delete',
+     * 'labelEdit' => 'Edit',
+     * 'labelCrop' => 'Crop',
+     * ]
+     */
+    public $pluginViewOptions = [];
+
     public $view = 'advanced';
-
-
-    public $labelBtn               = 'Add files...';
-    public $labelSuccess           = 'uploaded success';
-    public $labelProcessingUpload  = 'Processing upload...';
-    public $labelUploadError       = 'uploading error...';
-    public $labelCrop              = 'Crop';
-    public $labelStart             = 'Start';
-    public $labelCancel            = 'Cancel';
-    public $labelDelete            = 'Delete';
-
 
     public $instagramEnable = false;
     public $facebookEnable  = false;
     public $vkontakteEnable = false;
     public $dropboxEnable = false;
+
 
     /**
      * Init widget
@@ -66,7 +82,6 @@ class UploadAdvanced extends Widget
 		parent::init();
         $this->registerAssets();
         $this->url = Url::to($this->url);
-        $this->options['multiple']  = ($this->multiple == true);
 
         if(!$this->id ) {
             $class = StringHelper::basename(get_class($this->model));
@@ -94,11 +109,18 @@ class UploadAdvanced extends Widget
         $id   = $this->id;
         $view = $this->getView();
 
-        $pluginOptions = [
-            'url' => $this->url
-        ];
+        $pluginOptions = [];
+        $pluginOptions['url'] = $this->url;
+
+
+        $pluginOptions['deviceUpload'] = $this->pluginDeviceUploadOptions;
+        $pluginOptions['linkUpload'] = $this->pluginLinkUploadOptions;
+        $pluginOptions['cropImage'] = $this->pluginCropImageOptions;
+        $pluginOptions['view'] = $this->pluginViewOptions;
+        $pluginOptions['adapters'] = $this->pluginAdaptersOptions;
 
         $this->prepatePluginOptionsWithAuth($pluginOptions);
+        $this->prepatePluginOptionsWithI18n($pluginOptions);
 
         $pluginOptionsString = Json::htmlEncode($pluginOptions);
         $js = "jQuery('#{$id}').kakStorageAdvancedUpload({$pluginOptionsString})";
@@ -119,6 +141,35 @@ class UploadAdvanced extends Widget
         return $authClientCollection;
     }
 
+    private function prepatePluginOptionsWithI18n( array &$options): void
+    {
+        if(!$this->i18n){
+            return;
+        }
+
+        $options['deviceUpload'] = array_merge([
+            'labelUpload' => \Yii::t('storage', 'Select files ...'),
+            'labelDropZone' => \Yii::t('storage', 'Drop files here'),
+            'labelStart' => \Yii::t('storage', 'Start'),
+            'labelCancel' => \Yii::t('storage', 'Cancel'),
+            'labelProcessingUpload' => \Yii::t('storage', 'Delete'),
+            'labelProcessingUpload' => \Yii::t('storage', 'Processing'),
+        ], $options['deviceUpload']);
+
+        $options['linkUpload'] = array_merge([
+            'labelInputTitle' => \Yii::t('storage','Enter URL to import a file'),
+            'labelImport' => \Yii::t('storage','Import'),
+        ], $options['linkUpload']);
+
+
+        $options['view'] = array_merge([
+            'labelDelete' =>  \Yii::t('storage', 'Delete'),
+            'labelEdit' =>  \Yii::t('storage', 'Edit'),
+            'labelCrop' => \Yii::t('storage', 'Crop'),
+        ], $options['view']);
+
+    }
+
     /**
      * @param array $options
      */
@@ -131,6 +182,7 @@ class UploadAdvanced extends Widget
 
         $baseRoute = '/storage/auth/token';
 
+        // todo new add version social upload files/photo
         if($this->instagramEnable && $authClientCollection->hasClient('instagram')){
             /** @var $client \kak\authclient\Instagram  */
             $client = $authClientCollection->getClient('instagram');
