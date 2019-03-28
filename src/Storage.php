@@ -73,6 +73,9 @@ class Storage extends Component implements StorateInterface
         return $storageCongif['level'] ?? 0;
     }
 
+
+
+
     /**
      * @param int $storageId
      * @param $stream
@@ -88,15 +91,14 @@ class Storage extends Component implements StorateInterface
         $fileName = $adapter->uniqueFilePath($ext, $level);
         $fileStorePath = sprintf('%s/%s', $storageId, $fileName);
 
-
         $isWrite = $adapter->writeStream($fileStorePath, $stream);
 
         $result = $adapter->getMetadata($fileStorePath);
 
         if($isWrite && $result){
             $result['type'] = $adapter->getMimetype($fileStorePath);
+            $result['base_url'] = $adapter->baseUrl;
             $result['path'] = $fileStorePath;
-
             return $result;
         }
         return [];
@@ -282,7 +284,11 @@ class Storage extends Component implements StorateInterface
 
         $info = pathinfo($filePath);
 
-        $fileStorePath = sprintf('%s/%s-%s', $info['dirname'], $prefix, $info['basename']);
+        if ($prefix !== '') {
+            $fileStorePath = sprintf('%s/%s-%s', $info['dirname'], $prefix, $info['basename']);
+        } else {
+            $fileStorePath = sprintf('%s/%s', $info['dirname'], $info['basename']);
+        }
 
         $width = $size->getWidth();
         $height = $size->getHeight();
@@ -308,7 +314,11 @@ class Storage extends Component implements StorateInterface
         }
 
         $stream = fopen($tmpFile, 'r+');
-        $isWrite = $adapter->writeStream($fileStorePath, $stream);
+        if ($adapter->has($fileStorePath)) {
+            $isWrite = $adapter->updateStream($fileStorePath, $stream);
+        } else {
+            $isWrite = $adapter->writeStream($fileStorePath, $stream);
+        }
         if(is_resource($stream)){
             fclose($stream);
         }
@@ -316,10 +326,56 @@ class Storage extends Component implements StorateInterface
         @unlink($tmpFile);
         $result = $adapter->getMetadata($fileStorePath);
 
-        return $isWrite && $result
-            ? $result
-            : [];
+        if($isWrite && $result){
+            $result['type'] = $adapter->getMimetype($fileStorePath);
+            $result['base_url'] = $adapter->baseUrl;
+            $result['path'] = $fileStorePath;
+            return $result;
+        }
+        return [];
     }
+
+    /**
+     * @param $storageId
+     * @param $filePath
+     * @throws InvalidConfigException
+     * @throws \ImagickException
+     */
+    public function optimizationImageByStorageId($storageId, $filePath)
+    {
+        $adapter = $this->getAdapterByStorageId($storageId);
+
+        $mimeType = $adapter->getMimetype($filePath);
+        $resizeFormat = $this->getResizeImageFormatByMimeType($mimeType);
+        if ((string)$resizeFormat === '') {
+            return;
+        }
+        $stream = $adapter->readStream($filePath);
+        $img = $this->readImageStream($stream);
+        if (is_resource($stream)) {
+            fclose($stream);
+        }
+
+        $info = pathinfo($filePath);
+        $fileStorePath = sprintf('%s/%s', $info['dirname'], $info['basename']);
+
+        $tmpFile = tempnam(sys_get_temp_dir(), sprintf('img-%s', time()));
+        $img->save($tmpFile, [
+            'format' => $resizeFormat
+        ]);
+        $stream = fopen($tmpFile, 'r+');
+        if ($adapter->has($fileStorePath)) {
+            $isWrite = $adapter->updateStream($fileStorePath, $stream);
+        } else {
+            $isWrite = $adapter->writeStream($fileStorePath, $stream);
+        }
+        if (is_resource($stream)) {
+            fclose($stream);
+        }
+        @unlink($tmpFile);
+
+    }
+
 
     /**
      * @param $storageId
@@ -342,9 +398,8 @@ class Storage extends Component implements StorateInterface
         $adapter = $this->getAdapterByStorageId($storageId);
 
         $mimeType = $adapter->getMimetype($filePath);
-
         $resizeFormat = $this->getResizeImageFormatByMimeType($mimeType);
-        if((string)$resizeFormat === '') {
+        if ((string)$resizeFormat === '') {
             return [];
         }
 
@@ -363,30 +418,29 @@ class Storage extends Component implements StorateInterface
             'format' => $resizeFormat
         ]);
 
-        if(is_resource($stream)){
+        if (is_resource($stream)) {
             fclose($stream);
         }
 
-        var_dump($tmpFile);
-
-
         $stream = fopen($tmpFile, 'r+');
-        $isWrite = $adapter->writeStream($fileStorePath, $stream);
-        if(is_resource($stream)){
+        if ($adapter->has($fileStorePath)) {
+            $isWrite = $adapter->updateStream($fileStorePath, $stream);
+        } else {
+            $isWrite = $adapter->writeStream($fileStorePath, $stream);
+        }
+        if (is_resource($stream)) {
             fclose($stream);
         }
         @unlink($tmpFile);
         $result = $adapter->getMetadata($fileStorePath);
 
-        return $isWrite && $result
-            ? $result
-            : [];
+        if ($isWrite && $result) {
+            $result['type'] = $adapter->getMimetype($fileStorePath);
+            $result['base_url'] = $adapter->baseUrl;
+            $result['path'] = $fileStorePath;
+            return $result;
+        }
+        return [];
     }
-
-
-
-
-
-
 
 }

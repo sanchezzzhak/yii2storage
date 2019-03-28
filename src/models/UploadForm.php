@@ -1,9 +1,9 @@
-<?php
+<?php namespace kak\storage\models;
 
-namespace kak\storage\models;
 use kak\storage\Storage;
 use \yii\base\Model;
 use yii\helpers\ArrayHelper;
+use yii\helpers\FileHelper;
 use yii\helpers\Json;
 
 class UploadForm extends Model
@@ -17,8 +17,6 @@ class UploadForm extends Model
     public $meta = '';
     public $meta_name = 'meta';
 
-
-    private $_newValue = false;
 
     /**
      * @return array
@@ -42,66 +40,23 @@ class UploadForm extends Model
     }
 
     /**
-     * @param $storageIn
-     * @param $storageTo
-     * @param array $options
-     * @return array
+     * @param $allowed
+     * @throws \yii\base\InvalidConfigException
      */
-    public function saveToStorage($storageIn,$storageTo, $options = [])
+    public function validateByExtensionAllowed($allowed)
     {
-        $storageSource = new Storage($storageIn);
-        $storageRemote = new Storage($storageTo);
-        $adapterTmp = $storageSource->getAdapter();
-
-        $arrMeta =  \Yii::$app->request->post($this->meta_name,[]);
-        $result = [];
-        if(count($arrMeta)) {
-
-            foreach($arrMeta as $meta) {
-
-                $data = Json::decode($meta);
-                $url = ArrayHelper::getValue($data,'url',false);
-                $storageId = ArrayHelper::getValue($data,'storage');
-
-                if($url && ($storageId && $storageId!=$storageTo) )
-                {
-                    $fileSource   =  $adapterTmp->getAbsolutePath($url);
-                    $photoPath    =  $storageRemote->save($fileSource,$options);
-
-                    $resultItem['url']          = $storageRemote->getAdapter()->getUrl($photoPath);
-                    $resultItem['storage']      = $storageTo;
-                    $resultItem['name_display'] = ArrayHelper::getValue($data,'name_display',null);
-                    $resultItem['size']         = ArrayHelper::getValue($data,'size',0);
-                    $resultItem['type']         = ArrayHelper::getValue($data,'type','null');
-
-                    $images = [];
-                    foreach($data['images'] as $prefix => $image) {
-                        $normalizeSource = $adapterTmp->getAbsolutePath($image['url']);
-                        $imageName = pathinfo($image['url'], PATHINFO_BASENAME);
-
-                        $url = $storageRemote->getAdapter()->getUrl(
-                        $storageRemote->save( pathinfo($normalizeSource,PATHINFO_DIRNAME) . '/'. $imageName  ,[
-                            'key' =>  pathinfo($photoPath,PATHINFO_DIRNAME) . '/'. $imageName
-                        ]));
-                        $images[$prefix] = [ 'url' => $url, 'storage' => $storageTo ];
-                    }
-                    $resultItem['images'] = $images;
-                    $result[] = $resultItem;
-
-                    $this->_newValue = true;
-                    continue;
-                }
-
-                $result[] = $data;
-            }
+        if($allowed === []){
+            return;
         }
-        return $result;
-    }
 
-    public function hasNewValue()
-    {
-        return $this->_newValue;
-    }
+        $mimeType = $file->type;
+        if ($mimeType === 'application/octet-stream'){
+            $mimeType = FileHelper::getMimeType($file->tempName);
+        }
 
+        if (!in_array($mimeType, $allowed)) {
+            $model->addError('file', 'extension file not allowed');
+        }
+    }
 
 }

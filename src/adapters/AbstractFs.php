@@ -52,6 +52,8 @@ abstract class AbstractFs extends BaseObject
     public const GENERATE_SYSTEM = 'system';
     public const GENERATE_SHA1 = 'sha1';
 
+    public $baseUrl = '';
+
     /**
      * @var \League\Flysystem\Config|array|string|null
      */

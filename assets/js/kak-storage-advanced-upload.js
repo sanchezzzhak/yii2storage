@@ -275,11 +275,13 @@ function getRoundedCanvas(sourceCanvas) {
 	  var img = this.getImage();
 	  var canvas = img.cropper('getCroppedCanvas');
 	  var imgUrl = canvas.toDataURL('image/jpeg');
-	  	console.log(`<img src="${imgUrl}">`)
+	  
+	  var replaceJson = viewFilesPlugin.getItemResult(self.fileId);
 	  
 	  canvas.toBlob(function(blob){
 	    var formData = new FormData();
 		formData.append('cropped', blob);
+		formData.append('replace', replaceJson);
 		
 		var endPointUrl = self.options.endPointUrl + $.param({ act: 'crop'});
 		
@@ -345,7 +347,7 @@ function getRoundedCanvas(sourceCanvas) {
 	  }
 	  this.showPlugin();
 	  
-	  var image = $('<img>', {src: result.path, class: 'wrap-image-source'});
+	  var image = $('<img>', {src: result.base_url + result.path, class: 'wrap-image-source'});
 	  var wrap = container.find('.cropper-container').empty();
 	  
 	  wrap.append(image);
@@ -509,12 +511,6 @@ function getRoundedCanvas(sourceCanvas) {
 	  var el = $(e.currentTarget).closest('.template-download');
 	  var tid = el.attr('data-tid');
 	  var raw = el.find('input[name="' + this.options.inputName +'"]').val();
-	  
-	  console.log('raw', raw);
-	  console.log('el', el);
-	  
-	  
-	  
 	  var plugin = this.app.getPlugin('CropImage');
 	  plugin.showCrop(tid, JSON.parse(raw));
 	},
@@ -534,9 +530,6 @@ function getRoundedCanvas(sourceCanvas) {
 	},
 	
 	updateFile: function(tid, result){
-      
-      console.log('result', result,  typeof result );
-      
 	  var compileTmpl = $(tmpl(this.options.downloadItemTemplate, {
 		tid: tid,
 		file: result,
@@ -550,7 +543,7 @@ function getRoundedCanvas(sourceCanvas) {
 	  .val(JSON.stringify(result));
 	  
 	  if(result.images !==undefined && result.images.thumbnail !==undefined){
-		compileTmpl.find('.preview').css("background-image", 'url(' + result.images.thumbnail.path + ')');
+		compileTmpl.find('.preview').css("background-image", 'url(' + result.images.thumbnail.base_url +  result.images.thumbnail.path + ')');
 		
 		// is enable plugin crop
 		var cropPlugin = this.app.getPlugin('CropImage');
@@ -589,34 +582,6 @@ function getRoundedCanvas(sourceCanvas) {
 	  if (this.options.template === null) {
 		this.options.template = '<div class="files"></div>';
 	  }
-	  
-	  /*
-	  	 {% if( o.result.errors){ %}
-				  <div class="error-upload cancel "> <p> File :{%= o.file.name_display %} <?=$context->labelUploadError?> </p>
-				  {% for (var key in o.result.errors) { %}
-				  {%=o.result.errors[key][0]%}</div>
-				  {% } %}
-				  </div>
-			  {% }
-			  
-		  {% if(o.file.images && o.file.images.thumbnail) { %}
-			  
-				  <span>
-					  <a class="preview" href="javascript:;"><img src="{%=o.file.images.thumbnail.url%}"></a>
-					  <div class="preview-box hide">
-						  <div class="act">
-							  <?php if($context->crop): ?>
-								  <a href="javascript:;" class="crop btn inline"> <?=$context->labelCrop;?></a>
-							  <?php endif;?>
-								  <a href="javascript:;" class="crop-cancel btn inline"> <?=$context->labelCancel?></a>
-						  </div>
-						  <img src="{%=o.result.images.preview.url%}">
-					  </div>
-				  </span>
-		  
-			  {% } %}
-			  
-	  * */
 	  
 	  if (this.options.downloadItemTemplate === null) {
 	  
@@ -875,24 +840,24 @@ function getRoundedCanvas(sourceCanvas) {
 		if (!plugin) {
 		  throw new Error('Plugin ViewFiles not found');
 		}
-	 
+		
 		plugin.addFile(data.result);
 		data.context.remove();
-	
-		$.each(data.result.files, function (index, file) {
-		  if (file.path) {
-			var link = $('<a>')
-			.attr('target', '_blank')
-			.prop('href', file.path);
-			$(data.context.children()[index])
-			.wrap(link);
-		  } else if (file.error) {
-			var error = $('<span class="text-danger"/>').text(file.error);
-			$(data.context.children()[index])
-			.append('<br>')
-			.append(error);
-		  }
-		});
+		//
+		// $.each(data.result.files, function (index, file) {
+		//   if (file.path) {
+		// 	var link = $('<a>')
+		// 	.attr('target', '_blank')
+		// 	.prop('href', file.base_url + file.path);
+		// 	$(data.context.children()[index])
+		// 	.wrap(link);
+		//   } else if (file.error) {
+		// 	var error = $('<span class="text-danger"/>').text(file.error);
+		// 	$(data.context.children()[index])
+		// 	.append('<br>')
+		// 	.append(error);
+		//   }
+		// });
 	  });
 	  
 	},

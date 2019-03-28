@@ -1,28 +1,85 @@
 <?php namespace kak\storage\actions;
 
-use kak\storage\models\UploadForm;
-
 use Yii;
+use yii\base\Action;
 use yii\helpers\FileHelper;
 use yii\helpers\Json;
+use yii\web\Response;
 use yii\web\UploadedFile;
 use yii\web\HttpException;
-use \kak\storage\Storage;
+use yii\base\ErrorException;
+use yii\helpers\ArrayHelper;
+use kak\storage\Storage;
+use kak\storage\models\UploadForm;
 
 /**
  * Class UploadAction
  * @package kak\storage\actions
  */
-class UploadAction extends BaseUploadAction
+class UploadAction extends Action
 {
+    public const IMAGE_RESIZE = 0;
+    public const IMAGE_THUMB = 1;
 
     public $form_name;
     public $form_model;
-    public $header = false;
-
-    public $random_name = false;
 
     public $download_max_size = 5 * 1048576; // 5MB
+    public $extension_allowed = [];
+    public $image_width_max = 1024;
+    public $image_height_max = 768;
+
+    public $resize_image = [
+        'preview' => [600, 400, UploadAction::IMAGE_RESIZE],
+        'thumbnail' => [120, 120, UploadAction::IMAGE_THUMB]
+    ];
+
+    public $defaultImageOptions = [
+        'quality' => 100
+    ];
+
+    public $result = [];
+    public $storageId = 'tmp';
+    public $storageClass = 'storage';
+
+
+
+    /**
+     * @return Storage
+     * @throws \yii\base\InvalidConfigException
+     */
+    public function getStorage(): Storage
+    {
+        return \Yii::$app->get($this->storageClass);
+    }
+
+    /**
+     * @return array
+     */
+    public function getResult()
+    {
+        return $this->result;
+    }
+
+    /**
+     * @param $url
+     * @return string|null
+     */
+    public function getExtension($url)
+    {
+        if (preg_match('#\.([\w\d]+)(?:\?|$)#is', $url, $matches)) {
+            return strtolower($matches[1]);
+        }
+        return null;
+    }
+
+
+    public function response(): ?array
+    {
+        return $this->result;
+    }
+
+
 
 
     public function init()
@@ -31,88 +88,16 @@ class UploadAction extends BaseUploadAction
             $this->form_model = Yii::createObject(['class' => $this->form_name]);
         }
         parent::init();
-
     }
 
-    /**
-     * Send header
-     */
-    protected function sendHeaders(): void
-    {
-        header('Vary: Accept');
-        if (Yii::$app->request->isAjax && isset($_SERVER['HTTP_ACCEPT']) && (strpos($_SERVER['HTTP_ACCEPT'], 'application/json') !== false)) {
-            header('Content-type: application/json');
-            return;
-        }
-        header('Content-type: text/plain');
-    }
 
-    protected function saveModel(UploadedFile $file): void
-    {
-        $model = $this->form_model;
-
-        $model->file = $file->name;
-        $model->size = $file->size;
-        $model->mime_type = $file->type;
-
-        $extList = [];
-        if ($model->validate()) {
-            $mimeType = $file->type;
-            if ($mimeType == 'application/octet-stream'){
-                $mimeType = FileHelper::getMimeType($file->tempName);
-            }
-
-            if ($mimeType != 'application/octet-stream'){
-                $extList = FileHelper::getExtensionsByMimeType($mimeType);
-            }
-
-            if ($mimeType == 'application/octet-stream' && !in_array('application/octet-stream', $this->extension_allowed)){
-                $mimeType = $this->getExtension($model->file);
-            }
-
-            if (count($this->extension_allowed) && !in_array($mimeType, $this->extension_allowed)) {
-                $model->addError('file', 'extension file not allowed');
-            }
-        }
-
-        if (!count($model->errors)) {
-            $extMimeType = count($extList) ? end($extList) : null;
-
-            $ext = $this->getExtension($model->file);
-            if ($ext === null) {
-                $ext = $extMimeType;
-            }
-
-            $storage = $this->getStorage();
-            $result = $storage->save($this->storageId, $file);
-            $result = $this->prepareResult($result);
-
-            if ($result !== []){
-
-                $result = array_merge($result, [
-                    "name_display" => $file->name,
-                    "images" => [],
-                ]);
-                $this->result = $result;
-
-                $this->processImageWithResult();
-
-            }
-
-        }
-
-        $this->result['errors'] = $model->getErrors();
-    }
-
-    protected function handleRemoteUrlUploading(): ?string
+    protected function handleRemoteUrlUploading()
     {
         $url = Yii::$app->request->post('remote');
         if ((string)$url === '') {
             return null;
         }
-
-     //   $urlInfo = parse_url($url);
-
+        
         $ch = curl_init($url);
         curl_setopt_array($ch, [
             CURLOPT_HEADER => false,
@@ -152,7 +137,7 @@ class UploadAction extends BaseUploadAction
                 }
 
 
-                $displayName = '';
+                $displayName = sprintf('%s.%s', time(), $ext);
                 $storage = $this->getStorage();
 
                 $tmpFile = tempnam(sys_get_temp_dir(), sprintf('img-%s', time()));
@@ -172,7 +157,7 @@ class UploadAction extends BaseUploadAction
                         'tmp_name' => $tmpFile,
                         'name' => $displayName
                     ]);
-                    $result = $this->prepareResult($result);
+                    $result = $this->processPrepareResult($result);
 
                     if ($result !== []){
                         $result = array_merge($result, [
@@ -197,7 +182,7 @@ class UploadAction extends BaseUploadAction
     /**
      * @return string|null
      */
-    protected function handleUploading(): ?string
+    protected function handleUploading()
     {
         $file = UploadedFile::getInstancesByName('file');
         if (!$file) {
@@ -205,40 +190,178 @@ class UploadAction extends BaseUploadAction
         }
 
         if (is_array($file)) {
-            if (count($file) === 1) {
+            if (count($file) > 0) {
                 $file = $file[0];
             }
-            $this->saveModel($file);
+
+            /** @var UploadForm $model */
+            $model = $this->form_model;
+
+            $model->file = $file->name;
+            $model->size = $file->size;
+            $model->mime_type = $file->type;
+
+
+            $model->validate();
+            $model->validateByExtensionAllowed($this->extension_allowed);
+
+            if (!$model->hasErrors()) {
+                $storage = $this->getStorage();
+                $result = $storage->save($this->storageId, $file);
+                $result = $this->processPrepareResult($result);
+
+                if ($result !== []){
+                    $result = array_merge($result, [
+                        "name_display" => $file->name,
+                        "images" => [],
+                    ]);
+                    $this->result = $result;
+                    $this->processImageWithResult();
+                }
+            }
+            $this->result['errors'] = $model->getErrors();
         }
 
         return $this->response();
     }
 
 
-    protected function handleCropping(): ?string
+    protected function handleCropping()
     {
         $file = UploadedFile::getInstanceByName('cropped');
-        $replaceFile = Yii::$app->request->post('replace');
 
         if (!$file) {
             return null;
         }
-        $this->saveModel($file);
 
+        $replace = Yii::$app->request->post('replace');
+        $replace = json_decode(json_decode($replace), true);
+
+        $storageId = ArrayHelper::getValue($replace,'storage');
+        $fileStorePath = ArrayHelper::getValue($replace, 'path');
+        $filenameDisplay = ArrayHelper::getValue($replace, 'name_display', $file->name);
+
+
+        /** @var UploadForm $model */
+        $model = $this->form_model;
+        $model->file = $filenameDisplay;
+        $model->size = $file->size;
+        $model->mime_type = $file->type;
+
+        $model->validate();
+        $model->validateByExtensionAllowed($this->extension_allowed);
+
+        if (!$model->hasErrors()) {
+
+            $storage = $this->getStorage();
+            $adapter = $storage->getAdapterByStorageId($storageId);
+
+
+    //  add config
+    //  $level = $this->getStorageLevelById($storageId);
+    //  $fileName = $adapter->uniqueFilePath($ext, $level);
+    //  $fileStorePath = sprintf('%s/%s', $storageId, $fileName);
+
+            $stream = fopen($file->tempName, 'r+');
+            if($adapter->has($fileStorePath)){
+                $isWrite = $adapter->updateStream($fileStorePath, $stream);
+            }else {
+                $isWrite = $adapter->writeStream($fileStorePath, $stream);
+            }
+            fclose($stream);
+
+            $result = $adapter->getMetadata($fileStorePath);
+
+            if($isWrite && $result){
+                $result['type'] = $adapter->getMimetype($fileStorePath);
+                $result['base_url'] = $adapter->baseUrl;
+                $result['path'] = $fileStorePath;
+
+                $result = array_merge($result, [
+                    "name_display" => $filenameDisplay,
+                    "images" => [],
+                ]);
+                $result = $this->processPrepareResult($result);
+                $this->result = $result;
+                $this->processImageWithResult();
+            }
+
+        }
+        $this->result['errors'] = $model->getErrors();
         return $this->response();
     }
 
+    /**
+     * @param $path_file
+     * @param $model
+     */
+    private function processImageWithResult()
+    {
+        $storage = $this->getStorage();
+
+        $adapter = $storage->getAdapterByStorageId($this->storageId);
+        $filePath = $this->result['path'];
+
+        $storage->optimizationImageByStorageId(
+            $this->storageId,
+            $filePath
+        );
+
+        foreach ($this->resize_image as $prefix => $param) {
+            list($image_width, $image_height) = $param;
+            $type = isset($param[2]) ? $param[2] : UploadAction::IMAGE_RESIZE;
+
+            $options = ArrayHelper::getValue($param, 'options', []);
+            $options = array_merge($this->defaultImageOptions, $options);
+
+            switch ($type) {
+                case UploadAction::IMAGE_RESIZE:
+                    $result = $storage->resizeImagePreviewByStorageId(
+                        $this->storageId,
+                        $filePath,
+                        $prefix,
+                        $image_width,
+                        $image_height,
+                        $options
+                    );
+                    break;
+                case UploadAction::IMAGE_THUMB:
+                    $result = $storage->resizeImageThumbnailByStorageId(
+                        $this->storageId,
+                        $filePath,
+                        $prefix,
+                        $image_width,
+                        $image_height,
+                        $options
+                    );
+                    break;
+            }
+
+            if ($result !== []) {
+                $result = $this->processPrepareResult($result);
+                $this->result['images'][$prefix] = $result;
+            }
+        }
+    }
+
+    /**
+     * @param array $result
+     * @return array
+     */
+    private function processPrepareResult(array $result): array
+    {
+        $result["storage"] = $this->storageId;
+        return $result;
+    }
 
     /**
      * @return string
      */
-    public function run(): ?string
+    public function run()
     {
-        $action = \Yii::$app->request->get('act');
+        Yii::$app->response->format = Response::FORMAT_JSON;
 
-        if ($this->header) {
-            $this->sendHeaders();
-        }
+        $action = \Yii::$app->request->get('act');
         switch ($action) {
             case 'crop':
                 return $this->handleCropping();

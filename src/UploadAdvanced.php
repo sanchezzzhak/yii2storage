@@ -1,5 +1,4 @@
-<?php
-namespace kak\storage;
+<?php namespace kak\storage;
 
 use yii\base\Widget;
 use yii\base\Model;
@@ -9,18 +8,12 @@ use yii\helpers\StringHelper;
 use yii\helpers\Url;
 
 
-/*
- <input name="files" id="files" type="file" data-role="upload" webkitdirectory="true" directory="true" multiple="multiple" autocomplete="off">
- */
-
 /**
- *
- *
- *
- * Class Upload Widget
+
+ * Class UploadAdvanced
  * @usage
  * ```php
-    <?= \kak\storage\Upload::widget([
+    <?= \kak\storage\UploadAdvanced::widget([
         'model' => $upload_form,
         'label_btn' => 'Select File',
         'auto_upload' => true,
