@@ -34,6 +34,7 @@ class UploadAdvanced extends Widget
     public $i18n = true;
     /**
      * @var array = [
+     * 'maxChunkSize' => 0,
      * 'multiple' => true,
      * 'autoUpload' => false,
      * 'dropZone' => true,
@@ -47,7 +48,9 @@ class UploadAdvanced extends Widget
      * 'labelProcessingUpload' => 'Processing',
      * ]
      */
-    public $pluginDeviceUploadOptions = [];
+    public $pluginDeviceUploadOptions = [
+        'maxChunkSize' => 1024 * 1024
+    ];
     /**
      * @var array = [
      * 'labelInputTitle' => 'Enter URL to import a file',

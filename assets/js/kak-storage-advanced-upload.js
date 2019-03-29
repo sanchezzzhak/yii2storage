@@ -687,7 +687,12 @@ function getRoundedCanvas(sourceCanvas) {
 		dataType: 'json',
 		data: { remote: remoteUrl }
 	  }).done(function(result){
-		viewFilesPlugin.addFile(result);
+	    if(!result || !result.path){
+			return;
+		}
+	    if(result.path){
+		  viewFilesPlugin.addFile(result);
+		}
 	  })
 	  
 	},
@@ -706,6 +711,7 @@ function getRoundedCanvas(sourceCanvas) {
 	  uploadItemTemplate: null,
 	  multiple: true,
 	  endPointUrl: '',
+	  maxChunkSize: 0,
 	  autoUpload: false,
 	  dropZone: true,
 	  dropZoneEffect: true,
@@ -777,14 +783,19 @@ function getRoundedCanvas(sourceCanvas) {
 	  });
 	  
 	  var fileUploader = $el.find('input[type="file"]').fileupload({
+		maxChunkSize: this.options.maxChunkSize,
 		dataType: 'json',
 		dropZone: this.options.dropZone ? $el.find('.wgt-drop-zone') : null,
 		autoUpload: this.options.autoUpload,
 		url: this.options.endPointUrl,
 		uploadTemplateId: null,
-		downloadTemplateId: null
+		downloadTemplateId: null,
+		beforeSend: function(xhr, data) {
+		  var file = data.files[0];
+		  xhr.setRequestHeader('X-File-Id', file.tid);
+		  xhr.setRequestHeader('X-File-Chunk-Size', self.options.maxChunkSize);
+		},
 	  });
-	  
 	  
 	  fileUploader.on('fileuploadadd', function (e, data) {
 		var $this = $(this);
@@ -843,9 +854,13 @@ function getRoundedCanvas(sourceCanvas) {
 		if (!plugin) {
 		  throw new Error('Plugin ViewFiles not found');
 		}
+	 
+		if(data.result && data.result.path){
+		  plugin.addFile(data.result);
+		  data.context.remove();
+		}
 		
-		plugin.addFile(data.result);
-		data.context.remove();
+
 		//
 		// $.each(data.result.files, function (index, file) {
 		//   if (file.path) {

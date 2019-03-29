@@ -13,19 +13,19 @@ class LocalFs extends AbstractFs
     /**
      * @var int
      */
-    public $writeFlags = LOCK_EX;
+    public $writeFlags = FILE_APPEND;
     /**
      * @var int
      */
-    public $linkHandling = Local::DISALLOW_LINKS;
+    public $linkHandling = Local::SKIP_LINKS;
     /**
      * @var array
      */
     public $permissions = [
         [
             'file' => [
-                'public' => 0744,
-                'private' => 0700,
+                'public' => 0755,
+                'private' => 0755,
             ],
             'dir' => [
                 'public' => 0755,
@@ -50,7 +50,8 @@ class LocalFs extends AbstractFs
      */
     protected function initAdapter()
     {
-        return new Local($this->path, $this->writeFlags, $this->linkHandling, $this->permissions);
+        return new Local($this->path, 0);
     }
+
 
 }

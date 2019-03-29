@@ -115,7 +115,7 @@ class Storage extends Component implements StorateInterface
             $fileSourcePath = $file['tmp_name'];
             $fileSouceName = $file['name'];
         }
-
+//        UPLOAD_ERR_NO_FILE
         $ext = pathinfo($fileSouceName, PATHINFO_EXTENSION);
         $stream = fopen($fileSourcePath, 'r+');
         $result = $this->saveStream($storageId, $stream, $ext, $options);

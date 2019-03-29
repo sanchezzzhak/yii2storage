@@ -57,7 +57,9 @@ abstract class AbstractFs extends BaseObject
     /**
      * @var \League\Flysystem\Config|array|string|null
      */
-    public $config;
+    public $config = [
+        'disable_asserts' => true,
+    ];
     /**
      * @var string|null
      */
