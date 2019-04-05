@@ -20,7 +20,7 @@ $context = $this->context;
         <div class="wgt-header-more"></div>
     </div>
     <div class="wgt-wrap-content"></div>
-    <div class="progress" role="progressbar" aria-valuemin="0" aria-valuemax="100">
+    <div class="wgt-all-progress" role="progressbar" aria-valuemin="0" aria-valuemax="100">
         <div class="bar" style="width: 0%"><span></span></div>
     </div>
 </div>

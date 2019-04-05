@@ -1,5 +1,8 @@
 <?php namespace kak\storage\adapters;
 
+use League\Flysystem\Adapter\Ftp;
+use Yii;
+use yii\base\InvalidConfigException;
 /**
  * Class FtpFs
  * @package kak\storage\adapters

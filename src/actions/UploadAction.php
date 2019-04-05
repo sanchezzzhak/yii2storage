@@ -1,5 +1,6 @@
 <?php namespace kak\storage\actions;
 
+use kak\storage\adapters\AbstractFs;
 use League\Flysystem\Adapter\Local;
 use Yii;
 use yii\base\Action;
@@ -44,7 +45,6 @@ class UploadAction extends Action
     public $storageClass = 'storage';
 
 
-
     /**
      * @return Storage
      * @throws \yii\base\InvalidConfigException
@@ -81,8 +81,6 @@ class UploadAction extends Action
     }
 
 
-
-
     public function init()
     {
         if (!isset($this->form_model)) {
@@ -98,7 +96,7 @@ class UploadAction extends Action
         if ((string)$url === '') {
             return null;
         }
-        
+
         $ch = curl_init($url);
         curl_setopt_array($ch, [
             CURLOPT_HEADER => false,
@@ -114,7 +112,7 @@ class UploadAction extends Action
             list($mimeType) = explode(';', $info['content_type'], 2);
             $extList = FileHelper::getExtensionsByMimeType($mimeType);
 
-            if ($mimeType === 'application/octet-stream' && !in_array('application/octet-stream', $this->extension_allowed)){
+            if ($mimeType === 'application/octet-stream' && !in_array('application/octet-stream', $this->extension_allowed)) {
                 $mimeType = $this->getExtension($url);
             }
 
@@ -153,14 +151,13 @@ class UploadAction extends Action
                     curl_close($ch);
                     fclose($fp);
 
-
                     $result = $storage->save($this->storageId, [
                         'tmp_name' => $tmpFile,
                         'name' => $displayName
                     ]);
                     $result = $this->processPrepareResult($result);
 
-                    if ($result !== []){
+                    if ($result !== []) {
                         $result = array_merge($result, [
                             "name_display" => $displayName,
                             "images" => [],
@@ -191,13 +188,11 @@ class UploadAction extends Action
         }
 
 
-
         if (is_array($file)) {
             if (count($file) > 0) {
                 $file = $file[0];
             }
         }
-
 
         /** @var UploadForm $model */
         $model = $this->form_model;
@@ -230,6 +225,7 @@ class UploadAction extends Action
 
         $xFileId = \Yii::$app->request->headers->get('x-file-id');
         $xFileChunkSize = \Yii::$app->request->headers->get('x-file-chunk-size');
+        $xFileName = \Yii::$app->request->headers->get('x-file-name');
 
         $key = sprintf('xfile-%s', $xFileId);
 
@@ -239,66 +235,50 @@ class UploadAction extends Action
         $rangeCurrentSize = $contentRangePart ? $contentRangePart[2] : null;
 
         $ext = pathinfo($fileSouceName, PATHINFO_EXTENSION);
-        /** @var Local $adapter */
+        /** @var AbstractFs $adapter */
         $adapter = $storage->getAdapterByStorageId($this->storageId);
         $level = $storage->getStorageLevelById($this->storageId);
 
         $fileStorePath = Yii::$app->session->get($key, null);
-        if(!$fileStorePath || !$contentRange){
+        if (!$fileStorePath || !$contentRange) {
             $fileName = $adapter->uniqueFilePath($ext, $level);
             $fileStorePath = sprintf('%s/%s', $this->storageId, $fileName);
         }
 
-        if($contentRange) {
+        if ($contentRange) {
             Yii::$app->session->set($key, $fileStorePath);
         }
 
         $stream = fopen($fileSourcePath, 'r+');
-        if($adapter->has($fileStorePath) && $contentRange){
-            $adapter->putStream($fileStorePath, $stream);
-            $isWrite = 'put';
+        if ($adapter->has($fileStorePath) && $contentRange) {
+            $isWrite = $adapter->append($fileStorePath, $stream);
         } else {
-           $adapter->writeStream($fileStorePath, $stream);
-            $isWrite = 'write';
+            $isWrite = $adapter->writeStream($fileStorePath, $stream);
         }
+
         if (is_resource($stream)) {
             fclose($stream);
         }
 
+        $isUploadFinish = true;
+        if ($contentRange) {
+            $isUploadFinish = (ceil($rangeTotalSize / $xFileChunkSize) - ceil($rangeCurrentSize / $xFileChunkSize)) == 0;
+        }
+
         $result = $adapter->getMetadata($fileStorePath);
         if ($result) {
+            $result['name_display'] = $xFileName ?? $file->name;
             $result['type'] = $adapter->getMimetype($fileStorePath);
             $result['base_url'] = $adapter->baseUrl;
             $result['path'] = $fileStorePath;
-            $result['is_write_type'] = $isWrite;
             $this->result = $result;
         }
 
+        if ($isUploadFinish) {
+            $this->processImageWithResult();
+        }
 
-//
-////        UPLOAD_ERR_NO_FILE
-//                $ext = pathinfo($fileSouceName, PATHINFO_EXTENSION);
-//                $stream = fopen($fileSourcePath, 'r+');
-//
-//                $result = $this->saveStream($storageId, $stream, $ext, $options);
-//                fclose($stream);
-//                return $result;
-//
-//
-//                $result = $storage->save($this->storageId, $file);
-//                $result = $this->processPrepareResult($result);
-//
-//                if ($result !== []){
-//                    $result = array_merge($result, [
-//                        "name_display" => $file->name,
-//                        "images" => [],
-//                    ]);
-//                    $this->result = $result;
-//                    $this->processImageWithResult();
-//                }
-//            }
-//            $this->result['errors'] = $model->getErrors();
-
+        $this->result['errors'] = $model->getErrors();
 
         return $this->response();
     }
@@ -315,7 +295,7 @@ class UploadAction extends Action
         $replace = Yii::$app->request->post('replace');
         $replace = json_decode(json_decode($replace), true);
 
-        $storageId = ArrayHelper::getValue($replace,'storage');
+        $storageId = ArrayHelper::getValue($replace, 'storage');
         $fileStorePath = ArrayHelper::getValue($replace, 'path');
         $filenameDisplay = ArrayHelper::getValue($replace, 'name_display', $file->name);
 
@@ -333,25 +313,17 @@ class UploadAction extends Action
 
             $storage = $this->getStorage();
             $adapter = $storage->getAdapterByStorageId($storageId);
-
-
-
-    //  add config
-    //  $level = $this->getStorageLevelById($storageId);
-    //  $fileName = $adapter->uniqueFilePath($ext, $level);
-    //  $fileStorePath = sprintf('%s/%s', $storageId, $fileName);
-
             $stream = fopen($file->tempName, 'r+');
-            if($adapter->has($fileStorePath)){
+            if ($adapter->has($fileStorePath)) {
                 $isWrite = $adapter->updateStream($fileStorePath, $stream);
-            }else {
+            } else {
                 $isWrite = $adapter->writeStream($fileStorePath, $stream);
             }
             fclose($stream);
 
             $result = $adapter->getMetadata($fileStorePath);
 
-            if($isWrite && $result){
+            if ($isWrite && $result) {
                 $result['type'] = $adapter->getMimetype($fileStorePath);
                 $result['base_url'] = $adapter->baseUrl;
                 $result['path'] = $fileStorePath;

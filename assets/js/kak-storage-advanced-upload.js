@@ -121,7 +121,9 @@
 	  this.el.find(SELECTORS.WRAP_CONTENT).append(plugin);
 	  
 	  // header add menu
-	  var btnMore = $('<button>').text('+').off('click').on('click', $.proxy(this.onShowView, this));
+	  var btnMore = $('<button>', {
+	    type: 'button'
+	  }).text('+').off('click').on('click', $.proxy(this.onShowView, this));
 	  this.el.find(SELECTORS.WRAP_HEADER).find(SELECTORS.HEADER_MORE).append(btnMore);
 	  
 	  this.initViews();
@@ -359,17 +361,17 @@ function getRoundedCanvas(sourceCanvas) {
 		this.options.template = `
 			<div class="cropper-container"></div>
 			<div class="cropper-footer">
-			 	<button class="wgt-btn crop-me">{%# o.labelSave %}</button>
-				<button class="wgt-btn crop-cancel">{%# o.labelCancel %}</button>
+			 	<button type="button" class="wgt-btn crop-me">{%# o.labelSave %}</button>
+				<button type="button" class="wgt-btn crop-cancel">{%# o.labelCancel %}</button>
 				
 				{% if( o.enableRotate) { %}
-					<button class="wgt-btn crop-rotate-up">{%# o.labelRotateUp %}</button>
-					<button class="wgt-btn crop-rotate-down">{%# o.labelRotateDown %}</button>
+					<button type="button" class="wgt-btn crop-rotate-up">{%# o.labelRotateUp %}</button>
+					<button type="button" class="wgt-btn crop-rotate-down">{%# o.labelRotateDown %}</button>
 				{% } %}
 				
 				{% if( o.enableFlip) { %}
-					<button class="wgt-btn crop-flip-horizontal">{%# o.labelFlipHorizontal %}</button>
-					<button class="wgt-btn crop-flip-vertical">{%# o.labelFlipVertical %}</button>
+					<button type="button" class="wgt-btn crop-flip-horizontal">{%# o.labelFlipHorizontal %}</button>
+					<button type="button" class="wgt-btn crop-flip-vertical">{%# o.labelFlipVertical %}</button>
 				{% } %}
 			</div>
 		`;
@@ -435,7 +437,7 @@ function getRoundedCanvas(sourceCanvas) {
 	  
 	  if (this.options.template === null) {
 		this.options.template = `<div class="auth-container">
-			<button class="btn btn-inst-connect">Connect to Instagram</button>
+			<button type="button" class="btn btn-inst-connect">Connect to Instagram</button>
 		</div>`;
 	  }
    
@@ -548,7 +550,7 @@ function getRoundedCanvas(sourceCanvas) {
 		// is enable plugin crop
 		var cropPlugin = this.app.getPlugin('CropImage');
 		if(cropPlugin){
-		  var btn = $('<button>', {class: 'wgt-btn crop'}).text(this.options.labelCrop);
+		  var btn = $('<button>', {class: 'wgt-btn crop', type: 'button'}).text(this.options.labelCrop);
 		  compileTmpl.find('.wgt-template-actions').append(btn)
 		}
 	  }
@@ -596,8 +598,8 @@ function getRoundedCanvas(sourceCanvas) {
 			 <p class="size">{%= o.sizeFormat %}</p>
 			 
 			  <div class="wgt-template-actions">
-			  	  <button class="wgt-btn delete">{%= o.labelDelete %}</button>
-			  	  <button class="wgt-btn edit">{%= o.labelEdit %}</button>
+			  	  <button type="button" class="wgt-btn delete">{%= o.labelDelete %}</button>
+			  	  <button type="button" class="wgt-btn edit">{%= o.labelEdit %}</button>
 			  </div>
 			</div>
 		
@@ -650,7 +652,7 @@ function getRoundedCanvas(sourceCanvas) {
 		this.options.template = `
 			<div>{%= o.labelInputTitle %}</div>
 			<div><input type="text" class="input-form url-link-upload"></div>
-			<div><button class="btn btn-link-upload">{%= o.labelImport %}</div>
+			<div><button type="button" lass="btn btn-link-upload">{%= o.labelImport %}</div>
 			`;
 	  }
 	  
@@ -763,7 +765,7 @@ function getRoundedCanvas(sourceCanvas) {
 		$el.find('input[type="file"]').prop('multiple', true);
 	  }
 	  
-	  var uploadButton = $('<button/>')
+	  var uploadButton = $('<button/>', {type: 'button'})
 	  .addClass('wgt-btn')
 	  .prop('disabled', false)
 	  .text(self.options.labelStart)
@@ -782,6 +784,7 @@ function getRoundedCanvas(sourceCanvas) {
 		});
 	  });
 	  
+	  
 	  var fileUploader = $el.find('input[type="file"]').fileupload({
 		maxChunkSize: this.options.maxChunkSize,
 		dataType: 'json',
@@ -790,12 +793,20 @@ function getRoundedCanvas(sourceCanvas) {
 		url: this.options.endPointUrl,
 		uploadTemplateId: null,
 		downloadTemplateId: null,
+		drop: function (e, data) {
+		  $.each(data.files, function (index, file) {
+			console.log('Dropped file: ' + file.name);
+		  });
+		},
 		beforeSend: function(xhr, data) {
 		  var file = data.files[0];
 		  xhr.setRequestHeader('X-File-Id', file.tid);
+		  xhr.setRequestHeader('X-File-Name', file.name);
 		  xhr.setRequestHeader('X-File-Chunk-Size', self.options.maxChunkSize);
 		},
 	  });
+	  
+
 	  
 	  fileUploader.on('fileuploadadd', function (e, data) {
 		var $this = $(this);
@@ -844,8 +855,11 @@ function getRoundedCanvas(sourceCanvas) {
 	  });
 	  
 	  fileUploader.on('fileuploadprogressall', function (e, data) {
-		var progress = parseInt(data.loaded / data.total * 100, 10);
-		$el.find('.progress .bar').css('width', progress + '%');
+		var progressbar = self.app.element.find('.wgt-all-progress .bar');
+		if(progressbar.length){
+		  var progress = parseInt(data.loaded / data.total * 100, 10);
+		  progressbar.css('width', progress + '%');
+		}
 	  });
 	  
 	  fileUploader.on('fileuploaddone', function (e, data) {

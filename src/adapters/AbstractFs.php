@@ -10,6 +10,8 @@ use yii\base\Component;
 use yii\base\InvalidConfigException;
 use yii\helpers\FileHelper;
 
+use kak\storage\adapters\plugins\Append;
+
 
 /**
  * Filesystem
@@ -46,6 +48,8 @@ use yii\helpers\FileHelper;
  * @method boolean updateStream(string $path, resource $resource, array $config = [])
  * @method boolean write(string $path, string $contents, array $config = [])
  * @method boolean writeStream(string $path, resource $resource, array $config = [])
+ * @method boolean append(string $path, string|resource $resource)
+ *
  */
 abstract class AbstractFs extends BaseObject
 {
@@ -96,6 +100,8 @@ abstract class AbstractFs extends BaseObject
     {
         $adapter = $this->checkReplica($this->checkCached($this->initAdapter()));
         $this->filesystem = new Filesystem($adapter, $this->config);
+
+        $this->filesystem->addPlugin(new Append);
     }
 
     /**

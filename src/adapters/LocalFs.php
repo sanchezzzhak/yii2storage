@@ -53,5 +53,4 @@ class LocalFs extends AbstractFs
         return new Local($this->path, 0);
     }
 
-
 }
