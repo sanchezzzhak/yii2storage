@@ -652,7 +652,7 @@ function getRoundedCanvas(sourceCanvas) {
 		this.options.template = `
 			<div>{%= o.labelInputTitle %}</div>
 			<div><input type="text" class="input-form url-link-upload"></div>
-			<div><button type="button" lass="btn btn-link-upload">{%= o.labelImport %}</div>
+			<div><button type="button" class="btn btn-link-upload">{%= o.labelImport %}</div>
 			`;
 	  }
 	  
@@ -769,19 +769,23 @@ function getRoundedCanvas(sourceCanvas) {
 	  .addClass('wgt-btn')
 	  .prop('disabled', false)
 	  .text(self.options.labelStart)
-	  .on('click', function () {
+	  .on('click', function (e) {
+	    e.preventDefault();
 		var $this = $(this),
 		  data = $this.data();
 		$this
 		.off('click')
 		.text(self.options.labelCancel)
 		.on('click', function () {
+		  e.preventDefault();
 		  $this.remove();
 		  data.abort();
 		});
 		data.submit().always(function () {
 		  $this.remove();
 		});
+		
+		return false;
 	  });
 	  
 	  
@@ -803,7 +807,7 @@ function getRoundedCanvas(sourceCanvas) {
 		  xhr.setRequestHeader('X-File-Id', file.tid);
 		  xhr.setRequestHeader('X-File-Name', file.name);
 		  xhr.setRequestHeader('X-File-Chunk-Size', self.options.maxChunkSize);
-		},
+		}
 	  });
 	  
 
