@@ -1,5 +1,7 @@
 <?php namespace kak\storage;
 
+use kak\storage\adapters\LocalFs;
+use League\Flysystem\MountManager;
 use Yii;
 use yii\base\Component;
 use yii\base\Exception;
@@ -74,8 +76,6 @@ class Storage extends Component implements StorateInterface
     }
 
 
-
-
     /**
      * @param int $storageId
      * @param $stream
@@ -88,11 +88,9 @@ class Storage extends Component implements StorateInterface
         $adapter = $this->getAdapterByStorageId($storageId);
 
         $level = $this->getStorageLevelById($storageId);
-        $fileName = $adapter->uniqueFilePath($ext, $level);
-        $fileStorePath = sprintf('%s/%s', $storageId, $fileName);
+        $fileStorePath = $adapter->uniqueFilePath($storageId, $ext, $level);
 
         $isWrite = $adapter->writeStream($fileStorePath, $stream);
-
         $result = $adapter->getMetadata($fileStorePath);
 
         if($isWrite && $result){
@@ -103,6 +101,7 @@ class Storage extends Component implements StorateInterface
         }
         return [];
     }
+
 
     public function save(string $storageId, $file, array $options = []): array
     {
@@ -123,6 +122,46 @@ class Storage extends Component implements StorateInterface
         return $result;
     }
 
+
+    public function move(
+        string $stringInId,
+        string $storageInPath,
+        string $stoarageToId
+    )
+    {
+        $adapterIn = $this->getAdapterByStorageId($stringInId);
+        $adapterTo = $this->getAdapterByStorageId($stoarageToId);
+
+        // save current name
+        $level = $this->getStorageLevelById($stoarageToId);
+        $filename = pathinfo($storageInPath, PATHINFO_BASENAME);
+        $ext = pathinfo($storageInPath, PATHINFO_EXTENSION);
+        $fileStorePath = $adapterTo->generatePathFromFileName($stoarageToId, $filename, $level);
+        // is file exist then, create new file name
+        if ($adapterTo->has($fileStorePath)) {
+            $fileStorePath = $adapterTo->uniqueFilePath($stoarageToId, $ext, $level);
+        }
+
+        // is a local then, rename or copy file
+        if(get_class($adapterIn) === get_class($adapterTo)){
+              $adapterTo->rename($storageInPath, $fileStorePath);
+        } else {
+            $buffer = $adapterIn->readStream($storageInPath);
+            if ($adapterTo->writeStream($fileStorePath, $buffer)) {
+                if(is_resource($buffer)){
+                    fclose($buffer);
+                }
+            }
+            $adapterIn->delete($storageInPath);
+        }
+
+        $result = $adapterTo->getMetadata($fileStorePath);
+        $result['type'] = $adapterTo->getMimetype($fileStorePath);
+        $result['base_url'] = $adapterTo->baseUrl;
+        $result['path'] = $fileStorePath;
+
+        return $result;
+    }
 
     /**
      * @return \Imagine\Gd\Imagine|\Imagine\Gmagick\Imagine|Imagine
@@ -150,7 +189,6 @@ class Storage extends Component implements StorateInterface
 
         return new \Imagine\Image\Metadata\DefaultMetadataReader;
     }
-
 
     /**
      * @param \Imagine\Image\ImageInterface $img

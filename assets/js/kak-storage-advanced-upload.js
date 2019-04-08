@@ -861,6 +861,10 @@ function getRoundedCanvas(sourceCanvas) {
 	  
 	  
 	  fileUploader.on('fileuploadprocessalways', function (e, data) {
+	  
+		// $this.wrap('<form>').closest('form').get(0).reset();
+		// $this.unwrap();
+		
 		var index = data.index,
 		  file = data.files[index],
 		  node = $(data.context.children()[index]);

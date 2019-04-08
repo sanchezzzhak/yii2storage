@@ -266,6 +266,8 @@ class UploadAction extends Action
         }
 
         $result = $adapter->getMetadata($fileStorePath);
+        $result = $this->processPrepareResult($result);
+
         if ($result) {
             $result['name_display'] = $xFileName ?? $file->name;
             $result['type'] = $adapter->getMimetype($fileStorePath);

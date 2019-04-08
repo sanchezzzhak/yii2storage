@@ -85,6 +85,12 @@ abstract class AbstractFs extends BaseObject
      */
     protected $filesystem;
 
+    public function getFilesystem()
+    {
+        return $this->filesystem;
+    }
+
+
     /**
      * @inheritdoc
      */
@@ -110,7 +116,7 @@ abstract class AbstractFs extends BaseObject
      */
     public function generateFileName(string $type = self::GENERATE_SHA1): string
     {
-        switch($type) {
+        switch ($type) {
             case self::GENERATE_SHA1:
                 return sha1(\Yii::$app->user->id . microtime());
             case self::GENERATE_SYSTEM:
@@ -119,38 +125,54 @@ abstract class AbstractFs extends BaseObject
         }
     }
 
-   /**
-   *
-   * @param $ext
-   * @return string|void
-   * @throws Exception
-   */
-    public function uniqueFilePath(string $ext = '', int $level = 1, string $generateFileNameType = self::GENERATE_SHA1): string
+    /**
+     * @param string $storageId
+     * @param string $filename
+     * @param int $level
+     * @return string
+     */
+    public function generatePathFromFileName(
+        string $storageId,
+        string $filename,
+        int $level = 1
+    ): string
+    {
+        $filedir = $storageId;
+        for ($i = 0; $i < $level; $i++) {
+            $filedir .= "/" . substr($filename, $i * 2, 2);
+        }
+        $filepath = sprintf('%s/%s', $filedir, $filename);
+        return $filepath;
+    }
+
+
+    /**
+     * @param string $storageId
+     * @param string $ext
+     * @param int $level
+     * @param string $generateFileNameType
+     * @return string
+     */
+    public function uniqueFilePath(
+        string $storageId,
+        string $ext = '',
+        int $level = 1,
+        string $generateFileNameType = self::GENERATE_SHA1
+    ): string
     {
         $filehash = $this->generateFileName($generateFileNameType);
         $filename = sprintf(
             '%s%s',
             $filehash,
-            ((string)$ext !== '' ? sprintf('.%s', $ext)  : '')
+            ((string)$ext !== '' ? sprintf('.%s', $ext) : '')
         );
-        
 
-        $filedir = '';
-        for ($i = 0; $i < $level; $i++) {
-            $filedir .= "/" . substr($filename, $i * 2, 2);
-        }
-        if($filedir !== ''){
-            $filepath = sprintf( '%s/%s', $filedir , $filename);
-        }else {
-            $filepath = $filename;
-        }
-
+        $filepath = $this->generatePathFromFileName($storageId, $filename, $level);
         if ($this->has($filepath)) {
-            $filepath = $this->uniqueFilePath($ext, $level, $generateFileNameType);
+            $filepath = $this->uniqueFilePath($storageId, $ext, $level, $generateFileNameType);
         }
         return $filepath;
     }
-
 
 
     /**
@@ -173,6 +195,7 @@ abstract class AbstractFs extends BaseObject
         }
         return $adapter;
     }
+
     /**
      * @param AdapterInterface $adapter
      *
@@ -193,6 +216,7 @@ abstract class AbstractFs extends BaseObject
         }
         return $adapter;
     }
+
     /**
      * @return  AdapterInterface $adapter
      */
