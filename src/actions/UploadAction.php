@@ -295,7 +295,7 @@ class UploadAction extends Action
         $replace = Yii::$app->request->post('replace');
         $replace = json_decode(json_decode($replace), true);
 
-        $storageId = ArrayHelper::getValue($replace, 'storage');
+        $storageId = ArrayHelper::getValue($replace, 'storage', $this->storageId);
         $fileStorePath = ArrayHelper::getValue($replace, 'path');
         $filenameDisplay = ArrayHelper::getValue($replace, 'name_display', $file->name);
 
