@@ -129,6 +129,8 @@ class Storage extends Component implements StorateInterface
         string $stoarageToId
     )
     {
+
+
         $adapterIn = $this->getAdapterByStorageId($stringInId);
         $adapterTo = $this->getAdapterByStorageId($stoarageToId);
 
@@ -136,6 +138,7 @@ class Storage extends Component implements StorateInterface
         $level = $this->getStorageLevelById($stoarageToId);
         $filename = pathinfo($storageInPath, PATHINFO_BASENAME);
         $ext = pathinfo($storageInPath, PATHINFO_EXTENSION);
+
         $fileStorePath = $adapterTo->generatePathFromFileName($stoarageToId, $filename, $level);
         // is file exist then, create new file name
         if ($adapterTo->has($fileStorePath)) {

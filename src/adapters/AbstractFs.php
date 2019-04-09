@@ -137,9 +137,15 @@ abstract class AbstractFs extends BaseObject
         int $level = 1
     ): string
     {
+        $isMd5Hash = preg_match('#([a-f0-9]{32})#i', $filename, $match);
         $filedir = $storageId;
         for ($i = 0; $i < $level; $i++) {
-            $filedir .= "/" . substr($filename, $i * 2, 2);
+            if ($isMd5Hash) {
+                $filedir .= "/" . substr($match[1], $i * 2, 2);
+            } else {
+                $filedir .= "/" . substr($filename, $i * 2, 2);
+            }
+
         }
         $filepath = sprintf('%s/%s', $filedir, $filename);
         return $filepath;

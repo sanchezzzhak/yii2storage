@@ -241,8 +241,7 @@ class UploadAction extends Action
 
         $fileStorePath = Yii::$app->session->get($key, null);
         if (!$fileStorePath || !$contentRange) {
-            $fileName = $adapter->uniqueFilePath($ext, $level);
-            $fileStorePath = sprintf('%s/%s', $this->storageId, $fileName);
+            $fileStorePath = $adapter->uniqueFilePath($this->storageId, $ext, $level);
         }
 
         if ($contentRange) {
