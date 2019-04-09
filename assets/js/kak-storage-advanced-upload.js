@@ -1040,16 +1040,22 @@ function getRoundedCanvas(sourceCanvas) {
 	}
   };
   
+  
   // wrap jquery
   $.fn.kakStorageAdvancedUpload = function (option) {
 	var args = Array.apply(null, arguments);
-	
 	args.shift();
 	return this.each(function () {
 	  var $this = $(this), data = $this.data('kakStorageAdvancedUpload'),
 		options = typeof option === 'object' && option;
 	  if (!data) {
-		data = new kakStorageAdvancedUpload(this, $.extend({}, $.fn.kakStorageAdvancedUpload.defaults, options, $(this).data()));
+		
+	    data = new kakStorageAdvancedUpload(this, $.extend(
+		  {},
+		  $.fn.kakStorageAdvancedUpload.defaults,
+		  options,
+		  $(this).data('options')
+		));
 		
 		var endPountUrl = data.options.url;
 		if (endPountUrl.indexOf('?') === -1) {

@@ -1,5 +1,6 @@
 <?php namespace kak\storage;
 
+use Yii;
 use yii\base\Widget;
 use yii\base\Model;
 use yii\helpers\Html;
@@ -13,25 +14,27 @@ use yii\helpers\Url;
  * @usage
  * ```php
  * <?= \kak\storage\UploadAdvanced::widget([
-      'model' => $upload_form,
-      'url' => '/upload',
+ * 'model' => $upload_form,
+ * 'url' => '/upload',
  * ]); ?>
  * ```
  */
 class UploadAdvanced extends Widget
 {
-	/**
-	 * @var Model the data model that this widget is associated with.
-	 */
-	public $model;
+    /**
+     * @var Model the data model that this widget is associated with.
+     */
+    public $model;
 
     public $url = '/upload';
     public $options = [];
+
 
     /**
      * @var bool use auto translation
      */
     public $i18n = true;
+
     /**
      * @var array = [
      * 'maxChunkSize' => 0,
@@ -72,7 +75,7 @@ class UploadAdvanced extends Widget
     public $view = 'advanced';
 
     public $instagramEnable = false;
-    public $facebookEnable  = false;
+    public $facebookEnable = false;
     public $vkontakteEnable = false;
     public $dropboxEnable = false;
 
@@ -80,20 +83,18 @@ class UploadAdvanced extends Widget
     /**
      * Init widget
      */
-	public function init()
-	{
-		parent::init();
+    public function init()
+    {
+        parent::init();
         $this->registerAssets();
         $this->url = Url::to($this->url);
-
-        if(!$this->id ) {
+        if (!$this->id) {
             $class = StringHelper::basename(get_class($this->model));
-            $this->id = array_pop($class). '-form';
+            $this->id = array_pop($class) . '-form';
         }
-        if(!isset($this->options['id'])) {
-            $this->options['id'] = $this->id . '-upload-btn';
-        }
-	}
+
+        $this->options['id'] = $this->id;
+    }
 
     /**
      * Register assets
@@ -103,18 +104,11 @@ class UploadAdvanced extends Widget
         $view = $this->getView();
         bundles\StorageAsset::register($view);
     }
-    /**
-     * Run widget
-     * @return string
-     */
-	public function run()
-	{
-        $id   = $this->id;
-        $view = $this->getView();
 
+    public function getPluginOptions()
+    {
         $pluginOptions = [];
         $pluginOptions['url'] = $this->url;
-
 
         $pluginOptions['deviceUpload'] = $this->pluginDeviceUploadOptions;
         $pluginOptions['linkUpload'] = $this->pluginLinkUploadOptions;
@@ -125,28 +119,43 @@ class UploadAdvanced extends Widget
         $this->prepatePluginOptionsWithAuth($pluginOptions);
         $this->prepatePluginOptionsWithI18n($pluginOptions);
 
-        $pluginOptionsString = Json::htmlEncode($pluginOptions);
-        $js = "jQuery('#{$id}').kakStorageAdvancedUpload({$pluginOptionsString})";
-        $view->registerJs($js,$view::POS_READY, $id . ':kak-storage-advanced-upload ');
+        return $pluginOptions;
+    }
 
-		return $this->render($this->view ,[
-			'model'       => $this->model,
-            'options'     => $this->options
-		]);
-	}
+    /**
+     * Run widget
+     * @return string
+     */
+    public function run()
+    {
+
+        $view = $this->getView();
+
+        $this->options['data-options'] = $this->getPluginOptions();
+        Html::addCssClass($this->options, 'kak-upload-dashboard-wgt');
+
+        $js = "jQuery('#{$this->id}').kakStorageAdvancedUpload({})";
+        $view->registerJs($js, $view::POS_READY, $this->id . ':kak-storage-advanced-upload ');
+
+        return $this->render($this->view, [
+            'model' => $this->model,
+            'options' => $this->options
+        ]);
+    }
+
 
     /**
      * @return yii\authclient\Collection|null
      */
-	private function getAuthClientCollection()
+    private function getAuthClientCollection()
     {
         $authClientCollection = \Yii::$app->get('authClientCollection', false);
         return $authClientCollection;
     }
 
-    private function prepatePluginOptionsWithI18n( array &$options): void
+    private function prepatePluginOptionsWithI18n(array &$options): void
     {
-        if(!$this->i18n){
+        if (!$this->i18n) {
             return;
         }
 
@@ -160,14 +169,14 @@ class UploadAdvanced extends Widget
         ], $options['deviceUpload']);
 
         $options['linkUpload'] = array_merge([
-            'labelInputTitle' => \Yii::t('storage','Enter URL to import a file'),
-            'labelImport' => \Yii::t('storage','Import'),
+            'labelInputTitle' => \Yii::t('storage', 'Enter URL to import a file'),
+            'labelImport' => \Yii::t('storage', 'Import'),
         ], $options['linkUpload']);
 
 
         $options['view'] = array_merge([
-            'labelDelete' =>  \Yii::t('storage', 'Delete'),
-            'labelEdit' =>  \Yii::t('storage', 'Edit'),
+            'labelDelete' => \Yii::t('storage', 'Delete'),
+            'labelEdit' => \Yii::t('storage', 'Edit'),
             'labelCrop' => \Yii::t('storage', 'Crop'),
         ], $options['view']);
 
@@ -176,18 +185,18 @@ class UploadAdvanced extends Widget
     /**
      * @param array $options
      */
-	private function prepatePluginOptionsWithAuth(array &$options): void
+    private function prepatePluginOptionsWithAuth(array &$options): void
     {
         $authClientCollection = $this->getAuthClientCollection();
-        if(!$authClientCollection) {
+        if (!$authClientCollection) {
             return;
         }
 
         $baseRoute = '/storage/auth/token';
 
         // todo new add version social upload files/photo
-        if($this->instagramEnable && $authClientCollection->hasClient('instagram')){
-            /** @var $client \kak\authclient\Instagram  */
+        if ($this->instagramEnable && $authClientCollection->hasClient('instagram')) {
+            /** @var $client \kak\authclient\Instagram */
             $client = $authClientCollection->getClient('instagram');
             $options['instagram'] = [
                 'authUrl' => $client->buildAuthUrl([
@@ -206,8 +215,8 @@ class UploadAdvanced extends Widget
 //            ];
 //        }
 
-        if($this->facebookEnable && $authClientCollection->hasClient('facebook')){
-            /** @var $client \yii\authclient\clients\Facebook  */
+        if ($this->facebookEnable && $authClientCollection->hasClient('facebook')) {
+            /** @var $client \yii\authclient\clients\Facebook */
             $client = $authClientCollection->getClient('facebook');
             $options['facebook'] = [
                 'authUrl' => $client->buildAuthUrl([
@@ -216,8 +225,8 @@ class UploadAdvanced extends Widget
             ];
         }
 
-        if($this->vkontakteEnable && $authClientCollection->hasClient('vkontakte')){
-            /** @var $client \yii\authclient\clients\VKontakte  */
+        if ($this->vkontakteEnable && $authClientCollection->hasClient('vkontakte')) {
+            /** @var $client \yii\authclient\clients\VKontakte */
             $client = $authClientCollection->getClient('vkontakte');
             $options['vkontakte'] = [
                 'authUrl' => $client->buildAuthUrl([
@@ -228,12 +237,12 @@ class UploadAdvanced extends Widget
     }
 
 
-	/**
-	 * @return boolean whether this widget is associated with a data model.
-	 */
-	protected function hasModel()
-	{
-		return $this->model instanceof Model;
-	}
+    /**
+     * @return boolean whether this widget is associated with a data model.
+     */
+    protected function hasModel()
+    {
+        return $this->model instanceof Model;
+    }
 
 }

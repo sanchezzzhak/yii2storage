@@ -31,7 +31,7 @@ class UploadAction extends Action
     public $image_width_max = 1024;
     public $image_height_max = 768;
 
-    public $resize_image = [
+    public $resizeImage = [
         'preview' => [600, 400, UploadAction::IMAGE_RESIZE],
         'thumbnail' => [120, 120, UploadAction::IMAGE_THUMB]
     ];
@@ -360,7 +360,7 @@ class UploadAction extends Action
             $filePath
         );
 
-        foreach ($this->resize_image as $prefix => $param) {
+        foreach ($this->resizeImage as $prefix => $param) {
             list($image_width, $image_height) = $param;
             $type = isset($param[2]) ? $param[2] : UploadAction::IMAGE_RESIZE;
 
