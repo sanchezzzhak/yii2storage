@@ -6,11 +6,11 @@ class StorageAsset extends \yii\web\AssetBundle
 {
     public function init()
     {
-        $this->publishOptions['forceCopy'] = true;
+        // $this->publishOptions['forceCopy'] = true; 
         parent::init();
     }
 
-    public $sourcePath = '@kak/storage/assets';
+    public $sourcePath = '@vendor/kak/storage/assets';
 
     public $css = [
         'css/kak-storage-upload.css',
